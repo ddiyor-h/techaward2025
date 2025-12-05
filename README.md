@@ -312,5 +312,3 @@ POST   /api/v1/reports/generate
 - [GHG Protocol](https://ghgprotocol.org/)
 
 ## License
-
-MIT
