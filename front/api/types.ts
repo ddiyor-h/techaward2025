@@ -136,6 +136,8 @@ export interface IAQData {
   temperature: number;
   aqi_score: number;
   aqi_level: string;
+  pmv: number;  // Predicted Mean Vote (-3 to +3)
+  ppd: number;  // Predicted Percentage Dissatisfied (0-100%)
   timestamp: string;
 }
 

@@ -397,6 +397,54 @@ def get_hvac_status(building_id: str) -> Optional[HVACStatus]:
     )
 
 
+def _calculate_pmv_ppd(temp: float, humidity: float, air_velocity: float = 0.1) -> tuple[float, float]:
+    """
+    Calculate PMV (Predicted Mean Vote) and PPD (Predicted Percentage Dissatisfied).
+
+    Simplified ASHRAE 55 thermal comfort model.
+    PMV scale: -3 (cold) to +3 (hot), 0 is neutral.
+    PPD: percentage of people dissatisfied.
+
+    Args:
+        temp: Air temperature in Celsius
+        humidity: Relative humidity %
+        air_velocity: Air velocity in m/s (default 0.1 for typical office)
+
+    Returns:
+        Tuple of (PMV, PPD)
+    """
+    import math
+
+    # Typical office conditions
+    metabolic_rate = 1.2  # met (seated office work)
+    clothing_insulation = 0.7  # clo (typical office attire)
+
+    # Target neutral temperature (ASHRAE recommendation for offices)
+    neutral_temp = 22.5
+
+    # Simplified PMV calculation
+    # PMV increases with temperature above neutral, decreases below
+    temp_diff = temp - neutral_temp
+
+    # Humidity effect (high humidity feels warmer)
+    humidity_factor = (humidity - 50) * 0.01  # ±0.5 for extreme humidity
+
+    # Air velocity effect (higher velocity feels cooler)
+    velocity_factor = (0.1 - air_velocity) * 2  # Higher velocity = cooler
+
+    # Combined PMV (simplified linear model)
+    pmv = (temp_diff * 0.4) + humidity_factor + velocity_factor
+
+    # Clamp PMV to [-3, 3]
+    pmv = max(-3.0, min(3.0, pmv))
+
+    # PPD calculation (ASHRAE formula)
+    # PPD = 100 - 95 * exp(-0.03353*PMV^4 - 0.2179*PMV^2)
+    ppd = 100 - 95 * math.exp(-0.03353 * (pmv ** 4) - 0.2179 * (pmv ** 2))
+
+    return round(pmv, 2), round(ppd, 1)
+
+
 def get_iaq_status(building_id: str) -> Optional[IAQStatus]:
     """Get Indoor Air Quality status for a building."""
     building = get_building(building_id)
@@ -411,12 +459,44 @@ def get_iaq_status(building_id: str) -> Optional[IAQStatus]:
     zones = []
     zone_types = ["Lecture Hall", "Office", "Lab", "Library"]
 
+    # Different base temperatures for different floors (heat rises)
+    # Also different for different buildings
+    building_temp_offset = {
+        "pleiades-a": 0,      # Reference building
+        "pleiades-b": 0.5,    # Slightly warmer
+        "pleiades-c": -0.3,   # Slightly cooler
+    }.get(building_id, 0)
+
     for floor in range(1, min(building.floors + 1, 4)):
-        for zone_name in zone_types[:2]:  # 2 zones per floor
-            # Add variation per zone
+        # Higher floors are typically warmer (heat rises)
+        floor_temp_offset = (floor - 1) * 0.3
+
+        for idx, zone_name in enumerate(zone_types[:2]):  # 2 zones per floor
+            # Add variation per zone type
+            zone_temp_offset = {
+                "Lecture Hall": 0.8,   # More people = warmer
+                "Office": 0.0,         # Standard
+                "Lab": -0.5,           # AC typically stronger
+                "Library": -0.2,       # Quieter, more AC
+            }.get(zone_name, 0)
+
+            # Calculate zone temperature
+            base_temp = 22.5 + building_temp_offset + floor_temp_offset + zone_temp_offset
+            temperature = base_temp + random.uniform(-0.5, 0.5)
+
+            # Humidity varies by floor and zone
+            humidity = 45 + (floor * 2) + random.uniform(-5, 5)
+            humidity = max(30, min(70, humidity))  # Clamp to reasonable range
+
+            # Calculate PMV and PPD based on actual temperature and humidity
+            pmv, ppd = _calculate_pmv_ppd(temperature, humidity)
+
+            # Add variation per zone for CO2
             co2 = base_co2 + random.uniform(-100, 200)
 
-            pm25 = random.uniform(8, 25)  # Generally good air quality in Murcia
+            # Higher floors typically have slightly lower PM2.5
+            pm25 = random.uniform(8, 25) - (floor * 1.5)
+            pm25 = max(5, pm25)  # Minimum PM2.5
 
             # Calculate AQI
             if co2 < 600 and pm25 < 12:
@@ -438,10 +518,12 @@ def get_iaq_status(building_id: str) -> Optional[IAQStatus]:
                 co2_ppm=round(co2, 0),
                 pm25=round(pm25, 1),
                 tvoc=round(random.uniform(50, 200), 0),
-                humidity=round(45 + random.uniform(-10, 10), 1),
-                temperature=round(23 + random.uniform(-2, 2), 1),
+                humidity=round(humidity, 1),
+                temperature=round(temperature, 1),
                 aqi_score=aqi,
                 aqi_level=level,
+                pmv=pmv,
+                ppd=ppd,
                 timestamp=_now(),
             )
             zones.append(iaq)

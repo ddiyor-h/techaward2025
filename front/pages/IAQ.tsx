@@ -18,9 +18,10 @@ function transformIaqData(zones: IAQData[]) {
     pm25: zone.pm25,
     tvoc: zone.tvoc,
     humidity: zone.humidity,
+    temperature: zone.temperature,
     aqi: zone.aqi_score,
-    pmv: 0.5, // Estimate from temperature
-    ppd: 10, // Estimate
+    pmv: zone.pmv,  // Real PMV from API
+    ppd: zone.ppd,  // Real PPD from API
     history: Array.from({ length: 12 }, (_, i) => ({
       time: `${(i * 2).toString().padStart(2, '0')}:00`,
       aqi: zone.aqi_score + (Math.random() - 0.5) * 20,

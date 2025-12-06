@@ -165,6 +165,8 @@ class IAQData(BaseModel):
     temperature: float = Field(..., description="Temperature in Celsius")
     aqi_score: int = Field(..., ge=0, le=500, description="Air Quality Index 0-500")
     aqi_level: str = Field(..., description="good, moderate, unhealthy, etc.")
+    pmv: float = Field(..., ge=-3, le=3, description="Predicted Mean Vote (-3 cold to +3 hot)")
+    ppd: float = Field(..., ge=0, le=100, description="Predicted Percentage Dissatisfied (%)")
     timestamp: datetime
 
 
