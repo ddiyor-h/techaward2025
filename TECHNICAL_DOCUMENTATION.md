@@ -1,38 +1,38 @@
-# EqII Building Digital Twin - Техническая документация
+# EqII Building Digital Twin - Technical Documentation
 
-## Оглавление
-1. [Обзор системы](#1-обзор-системы)
-2. [Архитектура](#2-архитектура)
-3. [Тепловая модель 2R2C](#3-тепловая-модель-2r2c)
-4. [MPC оптимизатор](#4-mpc-оптимизатор)
-5. [Движок сценариев](#5-движок-сценариев-what-if)
-6. [ML прогнозирование](#6-ml-прогнозирование-энергии)
-7. [Источник данных PLEIAData](#7-источник-данных-pleiadata)
+## Table of Contents
+1. [System Overview](#1-system-overview)
+2. [Architecture](#2-architecture)
+3. [2R2C Thermal Model](#3-2r2c-thermal-model)
+4. [MPC Optimizer](#4-mpc-optimizer)
+5. [Scenario Engine](#5-scenario-engine-what-if)
+6. [ML Energy Forecasting](#6-ml-energy-forecasting)
+7. [PLEIAData Data Source](#7-pleiadata-data-source)
 8. [API Endpoints](#8-api-endpoints)
-9. [Frontend страницы](#9-frontend-страницы)
-10. [Бизнес-ценность](#10-бизнес-ценность)
+9. [Frontend Pages](#9-frontend-pages)
+10. [Business Value](#10-business-value)
 
 ---
 
-## 1. Обзор системы
+## 1. System Overview
 
-**EqII (Equilibrium II)** — платформа Digital Twin для оптимизации энергопотребления коммерческих зданий.
+**EqII (Equilibrium II)** is a Digital Twin platform for optimizing energy consumption in commercial buildings.
 
-### Ключевые возможности:
-- **Физическая симуляция** — 2R2C тепловая модель здания
-- **AI оптимизация** — MPC контроллер находит оптимальные setpoints
-- **ML прогнозирование** — Gradient Boosting предсказывает потребление
-- **What-If анализ** — 12 готовых сценариев для бизнес-решений
-- **Real-time мониторинг** — 7 дашбордов для facility manager
+### Key Features:
+- **Physical Simulation** — 2R2C thermal building model
+- **AI Optimization** — MPC controller finds optimal setpoints
+- **ML Forecasting** — Gradient Boosting predicts energy consumption
+- **What-If Analysis** — 12 ready-made scenarios for business decisions
+- **Real-time Monitoring** — 7 dashboards for facility managers
 
-### Потенциальный результат:
-- **15-35% экономии** на энергозатратах
-- **ROI 18-24 месяца**
-- **ESG compliance** готовые отчёты
+### Potential Results:
+- **15-35% savings** on energy costs
+- **18-24 months ROI**
+- **ESG compliance** ready reports
 
 ---
 
-## 2. Архитектура
+## 2. Architecture
 
 ```
 ┌─────────────────────────────────────────────────────────────────────────────┐
@@ -67,7 +67,7 @@
 │  │  │ThermalModel  │  │ MPCController│  │ScenarioEngine│  │  Energy    ││ │
 │  │  │    2R2C      │  │  (cvxpy)     │  │  (What-If)   │  │ Forecaster ││ │
 │  │  │              │  │              │  │              │  │   (ML)     ││ │
-│  │  │ Физика      │  │ Оптимизация │  │  Сценарии   │  │ Прогноз   ││ │
+│  │  │  Physics     │  │ Optimization │  │  Scenarios   │  │ Forecasting││ │
 │  │  └──────────────┘  └──────────────┘  └──────────────┘  └────────────┘│ │
 │  └───────────────────────────────────────────────────────────────────────┘ │
 │                                      │                                      │
@@ -89,55 +89,55 @@
 │                            PLEIAData Dataset                                 │
 │                    University of Murcia, Spain (2021)                        │
 │                                                                              │
-│  Здания: Pleiades A (4500m²), B (2500m²), C (1200m²)                        │
-│  Период: 1 Jan 2021 — 18 Dec 2021                                            │
-│  Данные: Energy, Temperature, Weather, CO2, HVAC, Occupancy                  │
+│  Buildings: Pleiades A (4500m²), B (2500m²), C (1200m²)                     │
+│  Period: 1 Jan 2021 — 18 Dec 2021                                            │
+│  Data: Energy, Temperature, Weather, CO2, HVAC, Occupancy                    │
 └─────────────────────────────────────────────────────────────────────────────┘
 ```
 
 ---
 
-## 3. Тепловая модель 2R2C
+## 3. 2R2C Thermal Model
 
-**Файл:** `backend/app/simulation/thermal_model.py`
+**File:** `backend/app/simulation/thermal_model.py`
 
-### 3.1 Что такое 2R2C?
-
----
-
-#### Простыми словами
-
-**Зачем это нужно:** Чтобы предсказать, как будет меняться температура в здании и сколько энергии потратит кондиционер.
-
-**Как это работает:** Представьте здание как большой термос. Если на улице жарко — тепло медленно просачивается внутрь через стены и окна. Кондиционер "откачивает" это тепло наружу, тратя электричество. Чем лучше утеплено здание (толще "стенки термоса") — тем меньше энергии нужно.
-
-**Почему "2R2C":** Это как электрическая схема с 2 резисторами (сопротивление теплопередаче) и 2 конденсаторами (способность накапливать тепло). Физики любят такие аналогии, потому что уравнения одинаковые.
-
-**Что это даёт нам:**
-- Можем рассчитать, сколько кВт·ч потратим завтра при прогнозе погоды +35°C
-- Можем проверить: "Если поднять температуру с 22 до 24°C — сколько сэкономим?"
-- Можем обучить модель на реальных данных здания и получить точные прогнозы
+### 3.1 What is 2R2C?
 
 ---
 
-2R2C — это **gray-box** (серый ящик) модель, которая представляет здание как электрическую RC-цепь:
+#### In Simple Terms
+
+**Why is this needed:** To predict how the temperature in a building will change and how much energy the air conditioner will consume.
+
+**How it works:** Imagine a building as a large thermos. When it's hot outside, heat slowly seeps inside through walls and windows. The air conditioner "pumps" this heat outside, consuming electricity. The better the building is insulated (thicker "thermos walls"), the less energy is needed.
+
+**Why "2R2C":** It's like an electrical circuit with 2 resistors (heat transfer resistance) and 2 capacitors (ability to store heat). Physicists love such analogies because the equations are the same.
+
+**What this gives us:**
+- We can calculate how many kWh we'll spend tomorrow with a weather forecast of +35°C
+- We can check: "If we raise the temperature from 22 to 24°C — how much will we save?"
+- We can train the model on real building data and get accurate predictions
+
+---
+
+2R2C is a **gray-box** model that represents a building as an electrical RC circuit:
 
 ```
                     R_iw                R_we
     T_internal ───/\/\/\/──┬──/\/\/\/─── T_external
                            │
-                          === C_w (тепловая масса стен)
+                          === C_w (wall thermal mass)
                            │
                           ⏊
 
-    Где:
-    ─/\/\/\/─  = Тепловое сопротивление (резистор)
-    ===        = Тепловая ёмкость (конденсатор)
+    Where:
+    ─/\/\/\/─  = Thermal resistance (resistor)
+    ===        = Thermal capacity (capacitor)
 ```
 
-### 3.2 Физические уравнения
+### 3.2 Physical Equations
 
-**Состояние системы:** два дифференциальных уравнения
+**System state:** two differential equations
 
 ```
 dT_i/dt = (1/C_i) × [(T_w - T_i)/R_iw + Q_hvac + Q_internal + Q_occupants]
@@ -145,58 +145,58 @@ dT_i/dt = (1/C_i) × [(T_w - T_i)/R_iw + Q_hvac + Q_internal + Q_occupants]
 dT_w/dt = (1/C_w) × [(T_i - T_w)/R_iw + (T_ext - T_w)/R_we + Q_solar]
 ```
 
-**Где:**
-- `T_i` — температура внутри помещения [°C]
-- `T_w` — температура стен/оболочки [°C]
-- `T_ext` — температура снаружи [°C]
-- `C_i` — тепловая ёмкость воздуха + мебели [J/K]
-- `C_w` — тепловая ёмкость стен [J/K]
-- `R_iw` — сопротивление внутри↔стены [K/W]
-- `R_we` — сопротивление стены↔улица [K/W]
-- `Q_hvac` — мощность HVAC [W]
-- `Q_internal` — внутренние теплопоступления [W]
-- `Q_solar` — солнечные теплопоступления [W]
+**Where:**
+- `T_i` — indoor temperature [°C]
+- `T_w` — wall/envelope temperature [°C]
+- `T_ext` — outdoor temperature [°C]
+- `C_i` — thermal capacity of air + furniture [J/K]
+- `C_w` — thermal capacity of walls [J/K]
+- `R_iw` — resistance indoor↔walls [K/W]
+- `R_we` — resistance walls↔outdoor [K/W]
+- `Q_hvac` — HVAC power [W]
+- `Q_internal` — internal heat gains [W]
+- `Q_solar` — solar heat gains [W]
 
-### 3.3 Параметры для Building A
+### 3.3 Parameters for Building A
 
 ```python
 @dataclass
 class ThermalParameters:
-    C_i: float = 6e6        # 6 МДж/К — воздух + мебель
-    C_w: float = 6e7        # 60 МДж/К — стены здания
-    R_iw: float = 0.002     # 0.002 К/Вт
-    R_we: float = 0.001     # 0.001 К/Вт
-    A_solar: float = 120.0  # 120 м² эффективная площадь остекления
-    COP_cool: float = 3.5   # КПД охлаждения
-    COP_heat: float = 4.0   # КПД отопления (тепловой насос)
-    hvac_capacity_kw: float = 150.0  # Макс. мощность HVAC
-    floor_area_m2: float = 4500.0    # Площадь здания
+    C_i: float = 6e6        # 6 MJ/K — air + furniture
+    C_w: float = 6e7        # 60 MJ/K — building walls
+    R_iw: float = 0.002     # 0.002 K/W
+    R_we: float = 0.001     # 0.001 K/W
+    A_solar: float = 120.0  # 120 m² effective glazing area
+    COP_cool: float = 3.5   # Cooling efficiency
+    COP_heat: float = 4.0   # Heating efficiency (heat pump)
+    hvac_capacity_kw: float = 150.0  # Max HVAC power
+    floor_area_m2: float = 4500.0    # Building area
 ```
 
-### 3.4 Расчёт теплопоступлений
+### 3.4 Heat Gain Calculations
 
 ---
 
-#### Простыми словами: Откуда берётся тепло в здании?
+#### In Simple Terms: Where Does Heat in a Building Come From?
 
-**Люди греют комнату.** Каждый человек — это "обогреватель" мощностью ~100 Ватт. 50 человек в офисе = 5 кВт бесплатного отопления. Летом это проблема (кондиционер должен это тепло убрать), зимой — помощь.
+**People heat the room.** Each person is a "heater" with ~100 Watts output. 50 people in an office = 5 kW of free heating. In summer this is a problem (AC must remove this heat), in winter it's helpful.
 
-**Компьютеры и лампы греют.** Офисная техника выделяет ~10-20 Вт/м². На 4500 м² — это до 90 кВт тепла. Поэтому серверные охлаждают круглый год.
+**Computers and lights heat.** Office equipment generates ~10-20 W/m². On 4500 m² — that's up to 90 kW of heat. That's why server rooms are cooled year-round.
 
-**Солнце греет через окна.** В полдень через 1 м² окна заходит ~500-800 Вт тепла. На 120 м² остекления — до 100 кВт. Жалюзи снижают это вдвое.
+**Sun heats through windows.** At noon, ~500-800 W of heat enters through 1 m² of window. On 120 m² of glazing — up to 100 kW. Blinds reduce this by half.
 
-**Зачем это считать:** Кондиционер должен убрать ВСЁ это тепло + то, что "просочилось" снаружи. Зная все источники тепла, можем точно рассчитать нагрузку на HVAC.
+**Why calculate this:** The AC must remove ALL this heat + what "seeped" from outside. Knowing all heat sources, we can accurately calculate the HVAC load.
 
 ---
 
-**Внутренние теплопоступления:**
+**Internal heat gains:**
 ```python
 def _compute_internal_gains(occupancy, hour, floor_area):
-    # Люди: 100 Вт на человека
-    occupant_gain = occupancy * 100  # Вт
+    # People: 100 W per person
+    occupant_gain = occupancy * 100  # W
 
-    # Оборудование: 10 Вт/м² (офис)
-    # Расписание: 100% в 8-18ч, 50% в 6-20ч, 20% ночью
+    # Equipment: 10 W/m² (office)
+    # Schedule: 100% at 8-18h, 50% at 6-20h, 20% at night
     if 8 <= hour <= 18:
         equipment_factor = 1.0
     elif 6 <= hour <= 20:
@@ -205,7 +205,7 @@ def _compute_internal_gains(occupancy, hour, floor_area):
         equipment_factor = 0.2
     equipment_gain = 10 * floor_area * equipment_factor
 
-    # Освещение: 10 Вт/м²
+    # Lighting: 10 W/m²
     if 7 <= hour <= 19:
         lighting_factor = 0.8 if occupancy > 0 else 0.3
     else:
@@ -215,251 +215,251 @@ def _compute_internal_gains(occupancy, hour, floor_area):
     return occupant_gain + equipment_gain + lighting_gain
 ```
 
-**Солнечные теплопоступления:**
+**Solar heat gains:**
 ```python
 def _compute_solar_gains(radiation, hour):
-    # Учёт жалюзи: прикрыты в полдень
+    # Blinds adjustment: partially closed at noon
     if 11 <= hour <= 15:
-        shading_factor = 0.5  # Жалюзи полузакрыты
+        shading_factor = 0.5  # Blinds half-closed
     else:
         shading_factor = 0.8
 
-    return radiation * A_solar * shading_factor  # [Вт]
+    return radiation * A_solar * shading_factor  # [W]
 ```
 
-### 3.5 HVAC контроллер
+### 3.5 HVAC Controller
 
 ---
 
-#### Простыми словами: Как кондиционер "думает"?
+#### In Simple Terms: How Does the Air Conditioner "Think"?
 
-**Задача:** Держать температуру близко к заданной (например, 22°C), но не включаться/выключаться каждую секунду.
+**Task:** Keep the temperature close to the setpoint (e.g., 22°C), but not turn on/off every second.
 
-**Deadband (мёртвая зона):** Кондиционер терпит отклонение ±0.5°C. Если задано 22°C, он не включится пока температура не выйдет за 21.5-22.5°C. Это экономит энергию и бережёт оборудование.
+**Deadband:** The AC tolerates a ±0.5°C deviation. If set to 22°C, it won't turn on until the temperature goes outside 21.5-22.5°C. This saves energy and protects equipment.
 
-**Пропорциональное управление:** Чем больше отклонение от нормы — тем сильнее работает кондиционер. При отклонении 1°C — работает на 30%, при 3°C — на 100%.
+**Proportional control:** The greater the deviation from normal, the harder the AC works. At 1°C deviation — works at 30%, at 3°C — at 100%.
 
-**Режимы работы:**
-- **Off** — выключен (ночью, в выходные)
-- **Heat** — только нагрев (зимой)
-- **Cool** — только охлаждение (летом)
-- **Auto** — сам выбирает (круглый год)
+**Operating modes:**
+- **Off** — turned off (at night, on weekends)
+- **Heat** — heating only (winter)
+- **Cool** — cooling only (summer)
+- **Auto** — chooses automatically (year-round)
 
-**Что это даёт:** Реалистичная симуляция того, как настоящий HVAC себя ведёт. Можем проверить, справится ли оборудование с жарой или нужно больше мощности.
+**What this gives:** Realistic simulation of how real HVAC behaves. We can check if equipment can handle the heat or if more capacity is needed.
 
 ---
 
-**Пропорциональный контроллер с гистерезисом:**
+**Proportional controller with hysteresis:**
 ```python
 def _hvac_controller(T_i, setpoint, mode):
     error = setpoint - T_i
     DEADBAND = 0.5  # °C
 
     if mode == "auto":
-        if error > DEADBAND:      # Слишком холодно
-            Q = min(error * 10000, capacity)  # Нагрев
+        if error > DEADBAND:      # Too cold
+            Q = min(error * 10000, capacity)  # Heating
             return Q, "heating"
-        elif error < -DEADBAND:   # Слишком жарко
-            Q = max(error * 10000, -capacity)  # Охлаждение
+        elif error < -DEADBAND:   # Too hot
+            Q = max(error * 10000, -capacity)  # Cooling
             return Q, "cooling"
         else:
-            return 0, "idle"  # В пределах deadband
+            return 0, "idle"  # Within deadband
 ```
 
-### 3.6 Интегрирование (Euler)
+### 3.6 Integration (Euler)
 
 ---
 
-#### Простыми словами: Как считается симуляция по шагам
+#### In Simple Terms: How the Simulation is Calculated Step by Step
 
-**Что такое интегрирование:** Мы знаем, КАК БЫСТРО меняется температура (скорость изменения). Чтобы узнать КАКАЯ будет температура через час — нужно "интегрировать" (сложить все маленькие изменения).
+**What is integration:** We know HOW FAST the temperature changes (rate of change). To find out WHAT the temperature will be in an hour — we need to "integrate" (sum up all small changes).
 
-**Метод Эйлера:** Самый простой способ. Берём текущую температуру, добавляем "скорость × время" и получаем новую температуру. Как в физике: новая позиция = старая + скорость × время.
+**Euler method:** The simplest way. Take the current temperature, add "rate × time" and get the new temperature. Like in physics: new position = old + velocity × time.
 
-**Шаг симуляции:** 1 час (3600 секунд). На каждом шаге:
-1. Считаем теплопоступления (солнце, люди, техника)
-2. Контроллер решает, включать ли HVAC
-3. Вычисляем, как быстро меняется температура
-4. Обновляем температуру: T_новая = T_старая + скорость × 3600
+**Simulation step:** 1 hour (3600 seconds). At each step:
+1. Calculate heat gains (sun, people, equipment)
+2. Controller decides whether to turn on HVAC
+3. Calculate how fast temperature changes
+4. Update temperature: T_new = T_old + rate × 3600
 
-**Зачем ограничения 10-40°C:** Чтобы при ошибках в данных симуляция не выдавала абсурд вроде -50°C внутри здания.
+**Why limits of 10-40°C:** So that with data errors the simulation doesn't produce absurd results like -50°C inside a building.
 
-**Что это даёт:** Почасовой прогноз температуры и энергопотребления на любой период — день, неделю, год.
+**What this gives:** Hourly temperature and energy consumption forecast for any period — day, week, year.
 
 ---
 
 ```python
 def simulate(inputs):
-    dt = 3600  # 1 час в секундах
+    dt = 3600  # 1 hour in seconds
 
     for i in range(n_steps - 1):
-        # Рассчитать теплопоступления
+        # Calculate heat gains
         Q_solar = _compute_solar_gains(radiation[i], hour)
         Q_int = _compute_internal_gains(occupancy[i], hour, floor_area)
 
-        # HVAC контроль
+        # HVAC control
         Q_hvac, mode = _hvac_controller(T_i, setpoint[i], hvac_mode[i])
 
-        # Производные
+        # Derivatives
         dT_i = (1/C_i) * ((T_w - T_i)/R_iw + Q_hvac + Q_int)
         dT_w = (1/C_w) * ((T_i - T_w)/R_iw + (T_ext[i] - T_w)/R_we + Q_solar)
 
-        # Euler шаг
+        # Euler step
         T_i = T_i + dT_i * dt
         T_w = T_w + dT_w * dt
 
-        # Расчёт электроэнергии
-        if Q_hvac > 0:  # Нагрев
+        # Electricity calculation
+        if Q_hvac > 0:  # Heating
             electrical_kw = (Q_hvac / 1000) / COP_heat
-        else:  # Охлаждение
+        else:  # Cooling
             electrical_kw = (abs(Q_hvac) / 1000) / COP_cool
 
-        cumulative_energy += electrical_kw  # kWh (за час)
+        cumulative_energy += electrical_kw  # kWh (per hour)
 ```
 
-### 3.7 Калибровка модели
+### 3.7 Model Calibration
 
 ---
 
-#### Простыми словами: Как модель "учится" на реальных данных
+#### In Simple Terms: How the Model "Learns" from Real Data
 
-**Проблема:** У каждого здания свои характеристики — толщина стен, площадь окон, качество утепления. Откуда взять эти цифры?
+**Problem:** Each building has its own characteristics — wall thickness, window area, insulation quality. Where do we get these numbers?
 
-**Решение — калибровка:** Берём исторические данные (температуру внутри, снаружи, потребление энергии за год) и подбираем параметры модели так, чтобы она давала результаты, похожие на реальность.
+**Solution — calibration:** We take historical data (indoor and outdoor temperature, energy consumption for a year) and adjust model parameters so it produces results similar to reality.
 
-**Как это работает:**
-1. **Смотрим на "плавность" температуры.** Если температура внутри меняется медленно (±0.3°C за час) — значит здание "тяжёлое", много бетона, высокая тепловая масса. Если скачет (±2°C) — здание "лёгкое".
+**How it works:**
+1. **Look at temperature "smoothness."** If indoor temperature changes slowly (±0.3°C per hour) — the building is "heavy," lots of concrete, high thermal mass. If it jumps (±2°C) — the building is "light."
 
-2. **Смотрим на энергопотребление.** Если здание тратит мало энергии на м² — значит хорошо утеплено (высокое сопротивление R). Если много — плохая изоляция.
+2. **Look at energy consumption.** If the building uses little energy per m² — it's well insulated (high R resistance). If a lot — poor insulation.
 
-**Результат:** Модель калибруется с точностью R² = 0.85 (85% реального поведения объясняется моделью). Это достаточно для принятия бизнес-решений.
+**Result:** The model calibrates with R² = 0.85 accuracy (85% of real behavior is explained by the model). This is sufficient for business decisions.
 
-**Что это даёт:** Модель становится "персональной" для конкретного здания, а не generic формулой.
+**What this gives:** The model becomes "personalized" for the specific building, not a generic formula.
 
 ---
 
-**Метод:** Least Squares против исторических данных PLEIAData
+**Method:** Least Squares against PLEIAData historical data
 
 ```python
 def calibrate(historical_T_int, historical_T_ext, historical_energy):
-    # 1. Оценка тепловой массы по сглаженности температуры
+    # 1. Estimate thermal mass from temperature smoothness
     temp_std = np.std(np.diff(historical_T_int))
     if temp_std < 0.5:
-        # Высокая тепловая масса — медленные изменения
+        # High thermal mass — slow changes
         C_i, C_w = 8e6, 8e7
     elif temp_std > 1.5:
-        # Низкая тепловая масса — быстрые изменения
+        # Low thermal mass — fast changes
         C_i, C_w = 3e6, 3e7
 
-    # 2. Оценка изоляции по энергоинтенсивности
+    # 2. Estimate insulation from energy intensity
     energy_per_m2 = np.mean(historical_energy) / floor_area
-    if energy_per_m2 < 0.01:  # Хорошая изоляция
+    if energy_per_m2 < 0.01:  # Good insulation
         R_we = 0.002
-    elif energy_per_m2 > 0.03:  # Плохая изоляция
+    elif energy_per_m2 > 0.03:  # Poor insulation
         R_we = 0.0005
 
-    # Результат: R² = 0.85 на валидационных данных
+    # Result: R² = 0.85 on validation data
 ```
 
 ---
 
-## 4. MPC оптимизатор
+## 4. MPC Optimizer
 
-**Файл:** `backend/app/simulation/mpc_controller.py`
+**File:** `backend/app/simulation/mpc_controller.py`
 
-### 4.1 Что такое MPC?
-
----
-
-#### Простыми словами: "Умный термостат" который планирует на 24 часа вперёд
-
-**Проблема обычного термостата:** Он глупый. Температура упала ниже 22°C — включил нагрев. Поднялась выше — выключил. Он не знает, что через 2 часа придёт 100 человек и нагреют комнату сами. Не знает, что в 14:00 электричество стоит в 3 раза дороже.
-
-**Решение MPC:** "Умный" алгоритм, который смотрит вперёд на 24 часа и планирует:
-- Знает прогноз погоды (будет +35°C в обед)
-- Знает расписание людей (все уйдут в 18:00)
-- Знает тарифы на электричество (пик в 14:00-18:00)
-- И находит ОПТИМАЛЬНЫЙ план: когда включить/выключить HVAC, чтобы и комфортно было, и дёшево.
-
-**Пример "умного" поведения:**
-- Утром, когда электричество дешёвое — охладить здание до 21°C (ниже нормы)
-- В пик тарифа (14-18ч) — выключить HVAC и "проехать" на запасённом холоде
-- К 18:00 температура поднимется до 24°C, но люди уже уходят
-- Результат: те же градусы комфорта, но на 20% дешевле
-
-**Что это даёт:**
-- Автоматическая экономия 10-20% на счетах за электричество
-- Без ухудшения комфорта (или с минимальным)
-- Работает само — facility manager не крутит кнопки вручную
+### 4.1 What is MPC?
 
 ---
 
-**Model Predictive Control** — алгоритм оптимизации, который:
-1. Смотрит на 24 часа вперёд
-2. Учитывает прогноз погоды, занятости, цен на электричество
-3. Находит оптимальные setpoints, минимизируя затраты при сохранении комфорта
+#### In Simple Terms: A "Smart Thermostat" That Plans 24 Hours Ahead
 
-### 4.2 Математическая постановка
+**Problem with regular thermostat:** It's dumb. Temperature dropped below 22°C — turned on heating. Rose above — turned off. It doesn't know that in 2 hours 100 people will arrive and heat the room themselves. Doesn't know that at 2 PM electricity costs 3 times more.
 
----
+**MPC solution:** A "smart" algorithm that looks 24 hours ahead and plans:
+- Knows the weather forecast (will be +35°C at noon)
+- Knows the people schedule (everyone leaves at 6 PM)
+- Knows electricity rates (peak at 2-6 PM)
+- And finds the OPTIMAL plan: when to turn HVAC on/off for both comfort and cost savings.
 
-#### Простыми словами: Что оптимизируем и при каких условиях
+**Example of "smart" behavior:**
+- In the morning when electricity is cheap — cool the building to 21°C (below normal)
+- During peak rate (2-6 PM) — turn off HVAC and "coast" on stored cold
+- By 6 PM temperature rises to 24°C, but people are already leaving
+- Result: same comfort level, but 20% cheaper
 
-**Цель (что минимизируем):** Затраты = стоимость энергии + штраф за дискомфорт + штраф за "дёрганье"
-
-Три слагаемых:
-1. **Стоимость энергии:** цена × потребление. Чем меньше тратим в дорогие часы — тем лучше.
-2. **Штраф за дискомфорт:** Если температура вышла за 21-23°C когда в здании люди — штрафуем алгоритм. Он будет стараться избегать этого.
-3. **Штраф за дёрганье:** Если кондиционер скачет 0→100→0→100 каждый час — это плохо для оборудования. Штрафуем резкие изменения.
-
-**Ограничения (что нельзя нарушить):**
-- Температура должна подчиняться физике (нельзя мгновенно охладить на 10°C)
-- Температура должна быть в границах комфорта (21-24°C когда есть люди)
-- Мощность HVAC ограничена (нельзя дать 200 кВт если установка на 100 кВт)
-- Скорость изменения мощности ограничена (нельзя с 0 до 100% за секунду)
-
-**Результат:** Алгоритм находит ЛУЧШИЙ компромисс между этими тремя целями при соблюдении всех ограничений.
+**What this gives:**
+- Automatic 10-20% savings on electricity bills
+- Without compromising comfort (or with minimal impact)
+- Works automatically — facility manager doesn't turn knobs manually
 
 ---
 
-**Задача оптимизации:**
+**Model Predictive Control** — an optimization algorithm that:
+1. Looks 24 hours ahead
+2. Considers weather forecast, occupancy, electricity prices
+3. Finds optimal setpoints, minimizing costs while maintaining comfort
+
+### 4.2 Mathematical Formulation
+
+---
+
+#### In Simple Terms: What We Optimize and Under What Conditions
+
+**Objective (what we minimize):** Cost = energy cost + discomfort penalty + "jerkiness" penalty
+
+Three components:
+1. **Energy cost:** price × consumption. The less we spend during expensive hours — the better.
+2. **Discomfort penalty:** If temperature goes outside 21-23°C when people are in the building — we penalize the algorithm. It will try to avoid this.
+3. **Jerkiness penalty:** If the AC jumps 0→100→0→100 every hour — that's bad for equipment. We penalize abrupt changes.
+
+**Constraints (what cannot be violated):**
+- Temperature must obey physics (can't instantly cool by 10°C)
+- Temperature must be within comfort bounds (21-24°C when people are present)
+- HVAC power is limited (can't give 200 kW if the unit is rated for 100 kW)
+- Rate of power change is limited (can't go from 0 to 100% in a second)
+
+**Result:** The algorithm finds the BEST compromise between these three goals while meeting all constraints.
+
+---
+
+**Optimization problem:**
 ```
 Minimize:   J = energy_cost + comfort_violations + control_changes
 
-            J = Σ(price[k] × |Q[k]|/COP)          # Стоимость энергии
-              + λ_comfort × Σ(slack[k])           # Штраф за дискомфорт
-              + λ_ramp × Σ(|Q[k+1] - Q[k]|²)      # Плавность управления
+            J = Σ(price[k] × |Q[k]|/COP)          # Energy cost
+              + λ_comfort × Σ(slack[k])           # Discomfort penalty
+              + λ_ramp × Σ(|Q[k+1] - Q[k]|²)      # Control smoothness
 
 Subject to:
-    T[k+1] = a×T[k] + b×T_ext[k] + c×Q[k]        # Динамика температуры
+    T[k+1] = a×T[k] + b×T_ext[k] + c×Q[k]        # Temperature dynamics
 
-    T_min - slack ≤ T[k] ≤ T_max + slack          # Границы комфорта
+    T_min - slack ≤ T[k] ≤ T_max + slack          # Comfort bounds
 
-    -100 kW ≤ Q[k] ≤ 50 kW                        # Ограничения мощности
+    -100 kW ≤ Q[k] ≤ 50 kW                        # Power limits
 
-    |Q[k+1] - Q[k]| ≤ 20 kW                       # Скорость изменения
+    |Q[k+1] - Q[k]| ≤ 20 kW                       # Rate of change
 ```
 
-### 4.3 Решение с cvxpy
+### 4.3 Solution with cvxpy
 
 ---
 
-#### Простыми словами: Как компьютер находит оптимум
+#### In Simple Terms: How the Computer Finds the Optimum
 
-**Почему это сложно:** У нас 24 часа × 1 переменная (мощность HVAC) = 24 числа, которые нужно подобрать. Перебор всех комбинаций невозможен (бесконечность).
+**Why it's difficult:** We have 24 hours × 1 variable (HVAC power) = 24 numbers to select. Brute-forcing all combinations is impossible (infinity).
 
-**Почему это возможно:** Наша задача — "выпуклая". Представьте чашку: как бы вы ни поставили шарик, он скатится на дно (оптимум). В невыпуклой задаче (горный рельеф) — можно застрять в локальной яме.
+**Why it's possible:** Our problem is "convex." Imagine a bowl: no matter where you place a ball, it will roll to the bottom (optimum). In a non-convex problem (mountain terrain) — you can get stuck in a local pit.
 
-**CVXPY:** Python-библиотека, которая берёт описание задачи и передаёт специализированному "решателю" (OSQP). Решатель — это как GPS-навигатор: знает, как быстро найти кратчайший путь.
+**CVXPY:** A Python library that takes the problem description and passes it to a specialized "solver" (OSQP). The solver is like a GPS navigator: knows how to quickly find the shortest path.
 
-**Переменные решения:**
-- `T[0..24]` — 25 значений температуры (каждый час)
-- `Q[0..23]` — 24 значения мощности HVAC
-- `s[0..23]` — "slack" (запас) для мягких ограничений комфорта
+**Decision variables:**
+- `T[0..24]` — 25 temperature values (each hour)
+- `Q[0..23]` — 24 HVAC power values
+- `s[0..23]` — "slack" for soft comfort constraints
 
-**Мягкие ограничения:** Иногда невозможно держать 22°C (например, жара +40). Вместо "ошибка, решения нет" — разрешаем отклонение, но штрафуем. Алгоритм сам решит: лучше заплатить за кВт или за дискомфорт.
+**Soft constraints:** Sometimes it's impossible to maintain 22°C (e.g., +40° heat). Instead of "error, no solution" — we allow deviation but penalize it. The algorithm will decide: better to pay for kWh or for discomfort.
 
-**Что это даёт:** Оптимальный план за ~50 миллисекунд. Можно пересчитывать каждый час с новым прогнозом погоды.
+**What this gives:** Optimal plan in ~50 milliseconds. Can recalculate every hour with new weather forecast.
 
 ---
 
@@ -467,77 +467,77 @@ Subject to:
 import cvxpy as cp
 
 def _optimize_cvxpy(current_temp, T_ext, occupancy, prices, N):
-    # Переменные решения
-    T = cp.Variable(N + 1)    # Траектория температуры
-    Q = cp.Variable(N)        # Мощность HVAC
-    s = cp.Variable(N)        # Slack для soft constraints
+    # Decision variables
+    T = cp.Variable(N + 1)    # Temperature trajectory
+    Q = cp.Variable(N)        # HVAC power
+    s = cp.Variable(N)        # Slack for soft constraints
 
-    # Целевая функция
+    # Objective function
     energy_cost = prices @ cp.abs(Q) / COP_cool
     comfort_cost = comfort_weight * cp.sum(s)
     ramp_cost = ramp_weight * cp.sum_squares(cp.diff(Q))
 
     objective = cp.Minimize(energy_cost + comfort_cost + ramp_cost)
 
-    # Ограничения
+    # Constraints
     constraints = []
 
-    # Начальное условие
+    # Initial condition
     constraints.append(T[0] == current_temp)
 
-    # Динамика (линеаризованная 2R2C)
+    # Dynamics (linearized 2R2C)
     for k in range(N):
         constraints.append(
             T[k+1] == a * T[k] + b * T_ext[k] + c * Q[k]
         )
 
-    # Комфорт (мягкие ограничения)
+    # Comfort (soft constraints)
     for k in range(N):
-        if occupancy[k] > 5:  # Есть люди
+        if occupancy[k] > 5:  # People present
             constraints.append(T[k] >= setpoint - 1.0 - s[k])
             constraints.append(T[k] <= setpoint + 1.0 + s[k])
-        else:  # Пусто — шире диапазон
+        else:  # Empty — wider range
             constraints.append(T[k] >= 19 - s[k])
             constraints.append(T[k] <= 26 + s[k])
         constraints.append(s[k] >= 0)
 
-    # Мощность
-    constraints.append(Q >= -100)  # Охлаждение
-    constraints.append(Q <= 50)    # Нагрев
+    # Power
+    constraints.append(Q >= -100)  # Cooling
+    constraints.append(Q <= 50)    # Heating
 
-    # Решить с OSQP solver
+    # Solve with OSQP solver
     problem = cp.Problem(objective, constraints)
     problem.solve(solver=cp.OSQP, warm_start=True)
 
     return T.value, Q.value
 ```
 
-### 4.4 Эвристический fallback (без cvxpy)
+### 4.4 Heuristic Fallback (without cvxpy)
 
 ---
 
-#### Простыми словами: Запасной план если математика не работает
+#### In Simple Terms: Backup Plan If Math Doesn't Work
 
-**Зачем нужен fallback:** CVXPY требует установки дополнительных библиотек (OSQP). На некоторых серверах их нет. Или задача может оказаться "неразрешимой" (конфликт ограничений).
+**Why fallback is needed:** CVXPY requires additional library installation (OSQP). Some servers don't have them. Or the problem might be "unsolvable" (constraint conflict).
 
-**Что делает fallback:** Вместо математической оптимизации — набор "умных правил":
-1. Если никого нет — расширить диапазон температур (экономим)
-2. Если скоро дорогой тариф — подготовить здание заранее (pre-cool/pre-heat)
-3. Во время дорогого тарифа — минимизировать работу HVAC
-4. Перед приходом людей — вернуть к комфортной температуре
+**What fallback does:** Instead of mathematical optimization — a set of "smart rules":
+1. If no one's there — widen temperature range (save energy)
+2. If expensive rate is coming — prepare building in advance (pre-cool/pre-heat)
+3. During expensive rate — minimize HVAC operation
+4. Before people arrive — return to comfortable temperature
 
-**Пример правила "pre-cooling":**
-- Сейчас 12:00, тариф 0.10 €/кВт·ч
-- В 14:00 тариф станет 0.30 €/кВт·ч
-- Правило: охладить здание ДО пика, пока дёшево
-- Снижаем setpoint с 22°C до 20.5°C
-- В пик здание "проедет" на накопленном холоде
+**Example "pre-cooling" rule:**
+- It's 12:00, rate is €0.10/kWh
+- At 2 PM rate becomes €0.30/kWh
+- Rule: cool the building BEFORE peak while it's cheap
+- Lower setpoint from 22°C to 20.5°C
+- During peak the building "coasts" on stored cold
 
-**Результат:** Экономия 10-15% вместо 15-20% с полным MPC, но работает всегда и везде.
+**Result:** 10-15% savings instead of 15-20% with full MPC, but works always and everywhere.
 
 ---
 
-Если cvxpy недоступен, используется rule-based подход:
+If cvxpy is unavailable, a rule-based approach is used:
 
 ```python
 def _optimize_simple(current_temp, T_ext, occupancy, prices):
@@ -546,24 +546,24 @@ def _optimize_simple(current_temp, T_ext, occupancy, prices):
         is_high_price = prices[k] > mean(prices) * 1.2
         next_high_price = prices[k+1] > mean(prices) * 1.2
 
-        # Определить target setpoint
+        # Determine target setpoint
         if is_occupied:
             target = preferred_setpoint
         else:
-            # Setback когда пусто
-            if T_ext[k] > 25:  # Лето
+            # Setback when empty
+            if T_ext[k] > 25:  # Summer
                 target = setpoint + 2
-            else:  # Зима
+            else:  # Winter
                 target = setpoint - 2
 
-        # Pre-conditioning: охладить/нагреть ДО дорогого периода
+        # Pre-conditioning: cool/heat BEFORE expensive period
         if next_high_price and not is_high_price:
             if T_ext[k] > 25:
                 target -= 1.5  # Pre-cool
             else:
                 target += 1.5  # Pre-heat
 
-        # Во время дорогого тарифа — позволить drift
+        # During expensive rate — allow drift
         if is_high_price and not is_occupied:
             if T_ext[k] > 25:
                 target += 1.5
@@ -571,186 +571,186 @@ def _optimize_simple(current_temp, T_ext, occupancy, prices):
                 target -= 1.5
 ```
 
-### 4.5 Результат MPC
+### 4.5 MPC Result
 
 ```python
 @dataclass
 class MPCResult:
-    optimal_setpoints: List[float]    # 24 оптимальных setpoint
-    predicted_temps: List[float]      # Прогноз температуры
-    predicted_power: List[float]      # Прогноз тепловой мощности
-    predicted_energy: List[float]     # Прогноз эл. энергии
+    optimal_setpoints: List[float]    # 24 optimal setpoints
+    predicted_temps: List[float]      # Temperature forecast
+    predicted_power: List[float]      # Thermal power forecast
+    predicted_energy: List[float]     # Electrical energy forecast
 
-    total_energy_kwh: float           # Суммарное потребление
-    total_cost_eur: float             # Суммарные затраты
-    cost_savings_percent: float       # Экономия vs baseline
+    total_energy_kwh: float           # Total consumption
+    total_cost_eur: float             # Total cost
+    cost_savings_percent: float       # Savings vs baseline
     comfort_score: float              # 0-100
 
-    optimization_status: str          # "optimal" или "heuristic"
-    solve_time_ms: float              # Время решения
-    schedule: List[Dict]              # Почасовой график
+    optimization_status: str          # "optimal" or "heuristic"
+    solve_time_ms: float              # Solve time
+    schedule: List[Dict]              # Hourly schedule
 ```
 
 ---
 
-## 5. Движок сценариев (What-If)
+## 5. Scenario Engine (What-If)
 
-**Файл:** `backend/app/simulation/scenarios.py`
-
----
-
-#### Простыми словами: "Что будет, если...?" — игра в симулятор до принятия решения
-
-**Зачем это нужно:** Facility manager думает: "А если поднять температуру на 2 градуса летом — сколько сэкономим?" Раньше — пробовал месяц, смотрел счета, возвращал обратно если не понравилось. Теперь — запускает симуляцию и через 5 секунд видит результат.
-
-**Как это работает:**
-1. Берём модель здания (2R2C, откалиброванную)
-2. Запускаем симуляцию с ТЕКУЩИМИ настройками — это "baseline" (база)
-3. Запускаем симуляцию с ИЗМЕНЁННЫМИ настройками — это "scenario"
-4. Сравниваем: сколько энергии, какой комфорт, сколько денег
-
-**Пример сценария "Summer Cooling +2°C":**
-- Baseline: setpoint = 22°C весь день → потратили 500 кВт·ч
-- Scenario: setpoint = 24°C с 12:00 до 18:00 → потратили 425 кВт·ч
-- Результат: экономия 15%, комфорт снизился на 3 пункта (из 100)
-- Рекомендация: "Внедряйте в обед, когда тепло снаружи"
-
-**Что это даёт:**
-- Принятие решений на основе данных, а не интуиции
-- Нет риска "сломать" реальное здание экспериментами
-- Количественное сравнение вариантов
-- Готовые аргументы для руководства ("по расчётам сэкономим €15,000/год")
+**File:** `backend/app/simulation/scenarios.py`
 
 ---
 
-### 5.1 Типы сценариев
+#### In Simple Terms: "What if...?" — Playing Simulator Before Making Decisions
+
+**Why is this needed:** A facility manager thinks: "What if we raise the temperature by 2 degrees in summer — how much will we save?" Before — they'd try it for a month, look at bills, revert if they didn't like it. Now — run a simulation and see the result in 5 seconds.
+
+**How it works:**
+1. Take the building model (2R2C, calibrated)
+2. Run simulation with CURRENT settings — this is the "baseline"
+3. Run simulation with CHANGED settings — this is the "scenario"
+4. Compare: how much energy, what comfort, how much money
+
+**Example "Summer Cooling +2°C" scenario:**
+- Baseline: setpoint = 22°C all day → spent 500 kWh
+- Scenario: setpoint = 24°C from 12:00 to 18:00 → spent 425 kWh
+- Result: 15% savings, comfort dropped by 3 points (out of 100)
+- Recommendation: "Implement during lunch when it's warm outside"
+
+**What this gives:**
+- Data-driven decision making, not intuition
+- No risk of "breaking" a real building with experiments
+- Quantitative comparison of options
+- Ready arguments for management ("calculations show €15,000/year savings")
+
+---
+
+### 5.1 Scenario Types
 
 ```python
 class ScenarioType(Enum):
-    SETPOINT_CHANGE = "setpoint_change"        # Изменение температуры
-    OCCUPANCY_PATTERN = "occupancy_pattern"    # Режим занятости
-    WEATHER_FORECAST = "weather_forecast"      # Погодные условия
+    SETPOINT_CHANGE = "setpoint_change"        # Temperature change
+    OCCUPANCY_PATTERN = "occupancy_pattern"    # Occupancy mode
+    WEATHER_FORECAST = "weather_forecast"      # Weather conditions
     DEMAND_RESPONSE = "demand_response"        # Peak shaving
-    EQUIPMENT_EFFICIENCY = "equipment_efficiency"  # COP оборудования
+    EQUIPMENT_EFFICIENCY = "equipment_efficiency"  # Equipment COP
 ```
 
-### 5.2 Предустановленные сценарии (12 штук)
+### 5.2 Preset Scenarios (12 total)
 
 ---
 
-#### Простыми словами: 12 готовых "рецептов" экономии
+#### In Simple Terms: 12 Ready-Made "Saving Recipes"
 
-Мы подготовили 12 типичных сценариев, которые проверены на практике в реальных зданиях. Facility manager выбирает из списка, а не придумывает с нуля.
+We've prepared 12 typical scenarios that are proven in practice in real buildings. The facility manager chooses from a list rather than inventing from scratch.
 
-**Категории сценариев:**
+**Scenario Categories:**
 
-**1. Изменение температуры (Setpoint)** — самый простой способ экономии
-- "Потерпеть" +2°C летом → -15% энергии
-- Снизить ночью на 3°C → -20% (ночью никого нет)
-- Расширить допустимый диапазон → -10%
+**1. Temperature Change (Setpoint)** — the simplest way to save
+- "Tolerate" +2°C in summer → -15% energy
+- Lower at night by 3°C → -20% (no one's there at night)
+- Widen allowed range → -10%
 
-**2. Режим занятости** — подстройка под реальное использование
-- 50% удалёнка → -25% (половина людей дома)
-- Выходные → -35% (здание почти пустое)
-- Праздники → -80% (только защита от замерзания)
+**2. Occupancy Mode** — adjusting to actual use
+- 50% remote work → -25% (half the people are at home)
+- Weekends → -35% (building nearly empty)
+- Holidays → -80% (only freeze protection)
 
-**3. Погода** — стресс-тесты на экстремальные условия
-- Жара +5°C → +30% расходов (готовимся к аномалии)
-- Мороз -5°C → +25% расходов
-- Идеальная погода → -40% (тестируем "потолок" экономии)
+**3. Weather** — stress tests for extreme conditions
+- Heatwave +5°C → +30% costs (preparing for anomaly)
+- Cold snap -5°C → +25% costs
+- Ideal weather → -40% (testing savings "ceiling")
 
-**4. Demand Response** — работа с тарифами электросети
-- Peak shaving 14-18ч → -20% (сбросить нагрузку в дорогие часы)
-- Сигнал от grid → -15% (участие в программах энергосбережения)
+**4. Demand Response** — working with grid rates
+- Peak shaving 2-6 PM → -20% (reduce load during expensive hours)
+- Grid signal → -15% (participating in energy saving programs)
 
-**5. Оборудование** — влияние состояния HVAC
-- Старое оборудование (-20% COP) → +25% расходов
-- Новое оборудование (+30% COP) → -23% расходов
+**5. Equipment** — HVAC condition impact
+- Old equipment (-20% COP) → +25% costs
+- New equipment (+30% COP) → -23% costs
 
 ---
 
-#### Изменение setpoint (3):
-| ID | Название | Параметры | Экономия |
-|----|----------|-----------|----------|
-| `setpoint-cooling-2c` | Summer Cooling +2°C | +2°C в 12:00-18:00 | **15%** |
-| `setpoint-night-setback` | Night Setback -3°C | -3°C в 22:00-06:00 | **20%** |
-| `setpoint-wider-deadband` | Wider Comfort Band | ±2°C расширение | **10%** |
+#### Setpoint change (3):
+| ID | Name | Parameters | Savings |
+|----|------|------------|---------|
+| `setpoint-cooling-2c` | Summer Cooling +2°C | +2°C at 12:00-18:00 | **15%** |
+| `setpoint-night-setback` | Night Setback -3°C | -3°C at 22:00-06:00 | **20%** |
+| `setpoint-wider-deadband` | Wider Comfort Band | ±2°C expansion | **10%** |
 
-#### Режим занятости (3):
-| ID | Название | Параметры | Экономия |
-|----|----------|-----------|----------|
+#### Occupancy mode (3):
+| ID | Name | Parameters | Savings |
+|----|------|------------|---------|
 | `occupancy-wfh-50` | 50% Work From Home | 50% occupancy | **25%** |
 | `occupancy-weekend` | Weekend Mode | 10% + pre-conditioning | **35%** |
-| `occupancy-holiday` | Holiday Shutdown | 0%, только freeze protection | **80%** |
+| `occupancy-holiday` | Holiday Shutdown | 0%, freeze protection only | **80%** |
 
-#### Погода (3):
-| ID | Название | Параметры | Эффект |
-|----|----------|-----------|--------|
-| `weather-heatwave` | Heat Wave +5°C | T_ext +5°C | **-30%** (рост) |
-| `weather-coldsnap` | Cold Snap -5°C | T_ext -5°C | **-25%** (рост) |
+#### Weather (3):
+| ID | Name | Parameters | Effect |
+|----|------|------------|--------|
+| `weather-heatwave` | Heat Wave +5°C | T_ext +5°C | **-30%** (increase) |
+| `weather-coldsnap` | Cold Snap -5°C | T_ext -5°C | **-25%** (increase) |
 | `weather-mild` | Mild Day | T=22°C, low solar | **+40%** |
 
 #### Demand Response (2):
-| ID | Название | Параметры | Экономия |
-|----|----------|-----------|----------|
-| `dr-peak-shaving` | Peak Shaving | -30% в 14:00-18:00, pre-cool | **20%** |
-| `dr-grid-signal` | Grid Flexibility | -50% на 2 часа | **15%** |
+| ID | Name | Parameters | Savings |
+|----|------|------------|---------|
+| `dr-peak-shaving` | Peak Shaving | -30% at 14:00-18:00, pre-cool | **20%** |
+| `dr-grid-signal` | Grid Flexibility | -50% for 2 hours | **15%** |
 
-#### Эффективность оборудования (2):
-| ID | Название | Параметры | Эффект |
-|----|----------|-----------|--------|
-| `equipment-aged-cop` | Aged COP -20% | Деградация оборудования | **-25%** (рост) |
-| `equipment-upgrade` | Upgrade COP +30% | Замена на эффективное | **+23%** |
+#### Equipment efficiency (2):
+| ID | Name | Parameters | Effect |
+|----|------|------------|--------|
+| `equipment-aged-cop` | Aged COP -20% | Equipment degradation | **-25%** (increase) |
+| `equipment-upgrade` | Upgrade COP +30% | Replacement with efficient | **+23%** |
 
-### 5.3 Как работает сценарий
+### 5.3 How a Scenario Works
 
 ---
 
-#### Простыми словами: Пошаговый процесс симуляции сценария
+#### In Simple Terms: Step-by-Step Scenario Simulation Process
 
-**Шаг 1: Создать модель здания**
-Загружаем параметры конкретного здания (площадь, тепловая масса, мощность HVAC). Если здание откалибровано — используем реальные характеристики.
+**Step 1: Create building model**
+Load specific building parameters (area, thermal mass, HVAC capacity). If the building is calibrated — use real characteristics.
 
-**Шаг 2: Сгенерировать "обычный день" (baseline)**
-Берём типичные входные данные:
-- Погода: средняя для этого месяца (+25°C летом, +5°C зимой)
-- Занятость: офисный паттерн (0 ночью → 100 людей в 9:00 → 0 в 18:00)
-- Setpoint: стандартные 22°C
-- HVAC: режим Auto
+**Step 2: Generate "normal day" (baseline)**
+Take typical input data:
+- Weather: average for this month (+25°C summer, +5°C winter)
+- Occupancy: office pattern (0 at night → 100 people at 9:00 → 0 at 18:00)
+- Setpoint: standard 22°C
+- HVAC: Auto mode
 
-**Шаг 3: Изменить под сценарий**
-Например, сценарий "Holiday Shutdown":
-- Занятость: 0 весь день
-- Setpoint: 15°C (только защита от замерзания)
-- HVAC: режим Heating only
+**Step 3: Modify for scenario**
+For example, "Holiday Shutdown" scenario:
+- Occupancy: 0 all day
+- Setpoint: 15°C (freeze protection only)
+- HVAC: Heating only mode
 
-**Шаг 4: Запустить ОБЕ симуляции**
-- Baseline → энергия 500 кВт·ч, комфорт 95/100
-- Scenario → энергия 100 кВт·ч, комфорт 60/100 (но никого нет!)
+**Step 4: Run BOTH simulations**
+- Baseline → energy 500 kWh, comfort 95/100
+- Scenario → energy 100 kWh, comfort 60/100 (but no one's there!)
 
-**Шаг 5: Сравнить и выдать рекомендации**
-- Экономия: 400 кВт·ч (80%)
-- CO2: -100 кг
-- Рекомендация: "Применять в праздники и нерабочие дни"
+**Step 5: Compare and provide recommendations**
+- Savings: 400 kWh (80%)
+- CO2: -100 kg
+- Recommendation: "Apply on holidays and non-working days"
 
 ---
 
 ```python
 def run_scenario(config, building_id, duration_hours=24):
-    # 1. Создать модель здания
+    # 1. Create building model
     model = create_building_model(building_id)
 
-    # 2. Сгенерировать baseline inputs
+    # 2. Generate baseline inputs
     baseline_inputs = _generate_baseline_inputs(building_id, duration_hours)
 
-    # 3. Модифицировать inputs согласно сценарию
+    # 3. Modify inputs according to scenario
     scenario_inputs = _apply_scenario_modifications(baseline_inputs, config)
 
-    # 4. Запустить ОБЕ симуляции
+    # 4. Run BOTH simulations
     baseline_result = model.simulate(baseline_inputs)
     scenario_result = model.simulate(scenario_inputs)
 
-    # 5. Сравнить результаты
+    # 5. Compare results
     return ScenarioComparison(
         baseline_energy_kwh=baseline_result.total_energy_kwh,
         scenario_energy_kwh=scenario_result.total_energy_kwh,
@@ -762,7 +762,7 @@ def run_scenario(config, building_id, duration_hours=24):
     )
 ```
 
-### 5.4 Пример: Setpoint Change
+### 5.4 Example: Setpoint Change
 
 ```python
 def _build_setpoint_scenario(baseline, params, model):
@@ -774,33 +774,33 @@ def _build_setpoint_scenario(baseline, params, model):
     for i, ts in enumerate(baseline.timestamps):
         hour = int((ts / 3600) % 24)
         if hour in hours:
-            new_setpoints[i] += delta  # Поднять на 2°C
+            new_setpoints[i] += delta  # Raise by 2°C
 
     scenario_inputs.setpoint = new_setpoints
     return scenario_inputs, model
 ```
 
-### 5.5 Генерация рекомендаций
+### 5.5 Recommendation Generation
 
 ---
 
-#### Простыми словами: Как система даёт советы
+#### In Simple Terms: How the System Gives Advice
 
-**Зачем нужны рекомендации:** Facility manager видит "экономия 15%", но что с этим делать? Система анализирует результаты и даёт конкретные советы.
+**Why recommendations are needed:** The facility manager sees "15% savings," but what to do with it? The system analyzes results and gives specific advice.
 
-**Логика рекомендаций:**
+**Recommendation logic:**
 
-| Условие | Рекомендация |
-|---------|--------------|
-| Экономия >10% И комфорт не пострадал | "Рекомендуем внедрение на постоянной основе" |
-| Экономия >5% НО комфорт снизился | "Применять в нерабочие часы или частично" |
-| Экономия <0% (рост затрат) | "Использовать для планирования резервов мощности" |
-| Любая экономия >0% | "Годовая проекция: €X,XXX экономии" |
+| Condition | Recommendation |
+|-----------|----------------|
+| Savings >10% AND comfort not affected | "We recommend permanent implementation" |
+| Savings >5% BUT comfort decreased | "Apply during non-working hours or partially" |
+| Savings <0% (cost increase) | "Use for capacity planning" |
+| Any savings >0% | "Annual projection: €X,XXX savings" |
 
-**Пример вывода:**
-> Сценарий "Summer Cooling +2°C" показывает **15% экономии** с минимальным влиянием на комфорт (-3 пункта). Рекомендуем внедрение в часы пиковой нагрузки 12:00-18:00. Прогнозируемая годовая экономия: **€8,200**.
+**Example output:**
+> "Summer Cooling +2°C" scenario shows **15% savings** with minimal comfort impact (-3 points). We recommend implementation during peak hours 12:00-18:00. Projected annual savings: **€8,200**.
 
-**Что это даёт:** Facility manager получает не просто цифры, а готовое решение с обоснованием.
+**What this gives:** The facility manager gets not just numbers, but a ready solution with justification.
 
 ---
 
@@ -808,33 +808,33 @@ def _build_setpoint_scenario(baseline, params, model):
 def _generate_recommendations(baseline, scenario, config, savings_pct, comfort_impact):
     recommendations = []
 
-    # Высокая экономия + минимальный impact на комфорт
+    # High savings + minimal comfort impact
     if savings_pct > 10 and comfort_impact > -5:
         recommendations.append(
-            f"Сценарий показывает {savings_pct:.0f}% экономии "
-            f"с минимальным влиянием на комфорт. Рекомендуем внедрение."
+            f"Scenario shows {savings_pct:.0f}% savings "
+            f"with minimal comfort impact. We recommend implementation."
         )
 
-    # Хорошая экономия но trade-off комфорта
+    # Good savings but comfort trade-off
     elif savings_pct > 5 and comfort_impact < -5:
         recommendations.append(
-            f"Экономия {savings_pct:.0f}% но комфорт снижается на "
-            f"{abs(comfort_impact):.0f} пунктов. Рассмотреть частичное "
-            f"внедрение в нерабочие часы."
+            f"{savings_pct:.0f}% savings but comfort decreases by "
+            f"{abs(comfort_impact):.0f} points. Consider partial "
+            f"implementation during non-working hours."
         )
 
-    # Негативная экономия (stress test)
+    # Negative savings (stress test)
     if savings_pct < 0:
         recommendations.append(
-            f"Сценарий увеличивает потребление на {abs(savings_pct):.0f}%. "
-            f"Использовать для планирования мощностей."
+            f"Scenario increases consumption by {abs(savings_pct):.0f}%. "
+            f"Use for capacity planning."
         )
 
-    # Годовая проекция
+    # Annual projection
     if savings_pct > 0:
         annual = scenario.total_cost_eur * 365 * (savings_pct / 100)
         recommendations.append(
-            f"Прогнозируемая годовая экономия: €{annual:,.0f}"
+            f"Projected annual savings: €{annual:,.0f}"
         )
 
     return recommendations
@@ -842,165 +842,165 @@ def _generate_recommendations(baseline, scenario, config, savings_pct, comfort_i
 
 ---
 
-## 6. ML прогнозирование энергии
+## 6. ML Energy Forecasting
 
-**Файл:** `backend/app/simulation/forecaster.py`
-
----
-
-#### Простыми словами: Машинное обучение для прогноза потребления
-
-**Зачем это нужно:** Facility manager хочет знать, сколько здание потратит завтра, чтобы:
-- Закупить электроэнергию по выгодной цене (forward contracts)
-- Участвовать в программах demand response
-- Планировать бюджет на месяц вперёд
-
-**Как это работает (без математики):**
-1. Берём историю потребления за год (8760 точек — по часу)
-2. Для каждой точки записываем: час дня, температура снаружи, выходной или нет, сколько людей было
-3. Алгоритм находит паттерны: "в жару в пятницу в 14:00 здание тратит ~80 кВт·ч"
-4. Даём алгоритму прогноз погоды на завтра — он выдаёт прогноз потребления
-
-**Почему Gradient Boosting:**
-- Хорошо работает с табличными данными (в отличие от нейросетей)
-- Устойчив к выбросам (аномально жаркий день не сломает модель)
-- Быстро обучается (минуты, не часы)
-- Понятно, какие факторы важны (feature importance)
-
-**Точность:** R² = 0.82 означает, что модель объясняет 82% вариации потребления. Оставшиеся 18% — случайные факторы (кто-то открыл окно, незапланированное мероприятие).
-
-**Что это даёт:**
-- Прогноз на 24-168 часов вперёд с точностью ±15%
-- Автоматическое определение пиковых часов
-- Понимание, какие факторы больше всего влияют на счета
+**File:** `backend/app/simulation/forecaster.py`
 
 ---
 
-### 6.1 Модель
+#### In Simple Terms: Machine Learning for Consumption Forecasting
 
-**Алгоритм:** Gradient Boosting Regressor (scikit-learn)
+**Why is this needed:** The facility manager wants to know how much the building will spend tomorrow to:
+- Buy electricity at a favorable price (forward contracts)
+- Participate in demand response programs
+- Plan the budget for the month ahead
+
+**How it works (without math):**
+1. Take consumption history for a year (8760 points — hourly)
+2. For each point record: hour of day, outdoor temperature, weekend or not, how many people were there
+3. Algorithm finds patterns: "in hot weather on Friday at 2 PM the building spends ~80 kWh"
+4. Give the algorithm tomorrow's weather forecast — it outputs consumption forecast
+
+**Why Gradient Boosting:**
+- Works well with tabular data (unlike neural networks)
+- Resistant to outliers (an abnormally hot day won't break the model)
+- Trains quickly (minutes, not hours)
+- Clear which factors are important (feature importance)
+
+**Accuracy:** R² = 0.82 means the model explains 82% of consumption variation. The remaining 18% are random factors (someone opened a window, unplanned event).
+
+**What this gives:**
+- Forecast for 24-168 hours ahead with ±15% accuracy
+- Automatic peak hour detection
+- Understanding which factors most affect bills
+
+---
+
+### 6.1 Model
+
+**Algorithm:** Gradient Boosting Regressor (scikit-learn)
 
 ```python
 model = GradientBoostingRegressor(
-    n_estimators=100,      # 100 деревьев
-    max_depth=5,           # Глубина дерева
-    learning_rate=0.1,     # Скорость обучения
-    min_samples_split=5,   # Мин. samples для split
-    min_samples_leaf=2,    # Мин. samples в листе
-    subsample=0.8,         # Стохастический GB
+    n_estimators=100,      # 100 trees
+    max_depth=5,           # Tree depth
+    learning_rate=0.1,     # Learning rate
+    min_samples_split=5,   # Min samples for split
+    min_samples_leaf=2,    # Min samples in leaf
+    subsample=0.8,         # Stochastic GB
     random_state=42
 )
 ```
 
-### 6.2 Feature Engineering (11 признаков)
+### 6.2 Feature Engineering (11 features)
 
 ---
 
-#### Простыми словами: Какие "подсказки" даём алгоритму
+#### In Simple Terms: What "Hints" We Give the Algorithm
 
-**Feature (признак)** — это характеристика, которую алгоритм использует для предсказания. Чем лучше признаки — тем точнее прогноз.
+**Feature** — a characteristic that the algorithm uses for prediction. The better the features — the more accurate the forecast.
 
-**Наши 11 признаков разделены на 4 группы:**
+**Our 11 features are divided into 4 groups:**
 
-**Временные (когда?):**
-- `hour` (0-23) — час дня. В 3 ночи потребление минимальное, в 14:00 — максимальное
-- `day_of_week` (0-6) — день недели. Пятница и выходные сильно отличаются от понедельника
-- `month` (1-12) — месяц. Июль ≠ Январь
-- `is_weekend` (0/1) — выходной или нет. Бинарный флаг для простоты
+**Temporal (when?):**
+- `hour` (0-23) — hour of day. At 3 AM consumption is minimal, at 2 PM — maximum
+- `day_of_week` (0-6) — day of week. Friday and weekends differ significantly from Monday
+- `month` (1-12) — month. July ≠ January
+- `is_weekend` (0/1) — weekend or not. Binary flag for simplicity
 
-**Погодные (что снаружи?):**
-- `outdoor_temp` — температура на улице. Главный драйвер расходов на охлаждение/отопление
-- `humidity` — влажность. Влияет на комфорт и работу кондиционера
-- `solar_radiation` — солнечная радиация. Больше солнца = больше нагрев через окна
+**Weather (what's outside?):**
+- `outdoor_temp` — outdoor temperature. Main driver of cooling/heating costs
+- `humidity` — humidity. Affects comfort and AC operation
+- `solar_radiation` — solar radiation. More sun = more heating through windows
 
-**Занятость (кто внутри?):**
-- `occupancy` — количество людей. 100 человек = +10 кВт тепла
+**Occupancy (who's inside?):**
+- `occupancy` — number of people. 100 people = +10 kW of heat
 
-**Лаговые (что было раньше?):**
-- `lag_1h` — потребление час назад. Инерция: если час назад было 50 кВт, сейчас вряд ли 5 кВт
-- `lag_24h` — потребление сутки назад. Паттерн повторяется: вторник 14:00 похож на понедельник 14:00
-- `rolling_mean_24h` — среднее за последние 24 часа. Тренд: растёт или падает потребление?
+**Lag (what happened before?):**
+- `lag_1h` — consumption an hour ago. Inertia: if it was 50 kW an hour ago, it's unlikely to be 5 kW now
+- `lag_24h` — consumption a day ago. Pattern repeats: Tuesday 2 PM is similar to Monday 2 PM
+- `rolling_mean_24h` — average for the last 24 hours. Trend: is consumption rising or falling?
 
-**Почему именно эти:** Проверено на реальных данных — добавление других признаков (давление, скорость ветра) не улучшает точность.
+**Why these specifically:** Tested on real data — adding other features (pressure, wind speed) doesn't improve accuracy.
 
 ---
 
 ```python
 FEATURE_NAMES = [
-    # Временные
+    # Temporal
     'hour',              # 0-23
     'day_of_week',       # 0-6 (Mon-Sun)
     'month',             # 1-12
     'is_weekend',        # 0/1
 
-    # Погода
+    # Weather
     'outdoor_temp',      # °C
     'humidity',          # %
     'solar_radiation',   # W/m²
 
-    # Занятость
-    'occupancy',         # Кол-во людей
+    # Occupancy
+    'occupancy',         # Number of people
 
-    # Лаговые признаки
-    'lag_1h',            # Потребление час назад
-    'lag_24h',           # Потребление сутки назад
-    'rolling_mean_24h'   # Скользящее среднее 24ч
+    # Lag features
+    'lag_1h',            # Consumption an hour ago
+    'lag_24h',           # Consumption a day ago
+    'rolling_mean_24h'   # 24h rolling average
 ]
 ```
 
-### 6.3 Обучение модели
+### 6.3 Model Training
 
 ---
 
-#### Простыми словами: Как алгоритм "учится"
+#### In Simple Terms: How the Algorithm "Learns"
 
-**Шаг 1: Подготовка данных**
-Берём CSV с историей (дата, потребление, погода). Убираем пропуски, выбросы, форматируем даты.
+**Step 1: Data preparation**
+Take CSV with history (date, consumption, weather). Remove missing values, outliers, format dates.
 
-**Шаг 2: Создание признаков**
-Из даты "2021-07-15 14:00" извлекаем: hour=14, day_of_week=3 (четверг), month=7, is_weekend=0.
-Добавляем погоду и лаги.
+**Step 2: Feature creation**
+From date "2021-07-15 14:00" extract: hour=14, day_of_week=3 (Thursday), month=7, is_weekend=0.
+Add weather and lags.
 
-**Шаг 3: Разделение на train/test**
-80% данных — для обучения, 20% — для проверки. ВАЖНО: не перемешиваем! Иначе модель "подсмотрит" будущее.
+**Step 3: Split into train/test**
+80% data — for training, 20% — for testing. IMPORTANT: don't shuffle! Otherwise the model "peeks" at the future.
 
-**Шаг 4: Масштабирование**
-Приводим все числа к одному диапазону (0-1). Иначе температура (0-40) "забьёт" is_weekend (0-1).
+**Step 4: Scaling**
+Bring all numbers to the same range (0-1). Otherwise temperature (0-40) "drowns out" is_weekend (0-1).
 
-**Шаг 5: Обучение**
-Gradient Boosting строит 100 "деревьев решений". Каждое следующее дерево исправляет ошибки предыдущих. Как игра "угадай число" — каждая попытка уточняет ответ.
+**Step 5: Training**
+Gradient Boosting builds 100 "decision trees." Each subsequent tree corrects the errors of previous ones. Like a "guess the number" game — each attempt refines the answer.
 
-**Шаг 6: Оценка точности**
-На тестовых 20% данных (которые модель не видела) проверяем:
-- R² = 0.82 — модель объясняет 82% вариации (хорошо)
-- MAE = 5.2 кВт·ч — средняя ошибка 5.2 кВт·ч
-- RMSE = 7.1 кВт·ч — "типичная" ошибка
+**Step 6: Accuracy evaluation**
+On the test 20% data (which the model hasn't seen) we check:
+- R² = 0.82 — model explains 82% of variation (good)
+- MAE = 5.2 kWh — average error 5.2 kWh
+- RMSE = 7.1 kWh — "typical" error
 
-**Что это даёт:** Обученная модель готова к прогнозам. Перетренировка раз в месяц с новыми данными.
+**What this gives:** A trained model ready for forecasting. Retraining monthly with new data.
 
 ---
 
 ```python
 def train(consumption_data, weather_data, test_size=0.2):
-    # 1. Подготовить данные
+    # 1. Prepare data
     df = _prepare_training_data(consumption_data, weather_data)
 
-    # 2. Создать признаки
+    # 2. Create features
     X, y = _create_features(df)
 
-    # 3. Split (сохраняя порядок времени!)
+    # 3. Split (preserving time order!)
     X_train, X_test, y_train, y_test = train_test_split(
         X, y, test_size=test_size, shuffle=False
     )
 
-    # 4. Масштабирование
+    # 4. Scaling
     X_train_scaled = scaler.fit_transform(X_train)
     X_test_scaled = scaler.transform(X_test)
 
-    # 5. Обучение
+    # 5. Training
     model.fit(X_train_scaled, y_train)
 
-    # 6. Оценка
+    # 6. Evaluation
     y_pred = model.predict(X_test_scaled)
     r2 = r2_score(y_test, y_pred)        # Target: > 0.80
     mae = mean_absolute_error(y_test, y_pred)
@@ -1009,35 +1009,35 @@ def train(consumption_data, weather_data, test_size=0.2):
     return ModelMetrics(r2_score=r2, mae=mae, rmse=rmse)
 ```
 
-### 6.4 Прогнозирование
+### 6.4 Forecasting
 
 ---
 
-#### Простыми словами: Как делается прогноз на завтра
+#### In Simple Terms: How Tomorrow's Forecast is Made
 
-**Входные данные:**
-1. Прогноз погоды на 24 часа (из OpenWeatherMap или аналога)
-2. Ожидаемая занятость (из календаря или типового паттерна)
-3. Потребление за последние 24 часа (для лаговых признаков)
+**Input data:**
+1. Weather forecast for 24 hours (from OpenWeatherMap or similar)
+2. Expected occupancy (from calendar or typical pattern)
+3. Consumption for the last 24 hours (for lag features)
 
-**Процесс:**
-1. Для каждого часа (00:00, 01:00, ... 23:00) собираем признаки
-2. Подставляем в обученную модель
-3. Получаем предсказание в кВт·ч
-4. Добавляем confidence interval (±15%)
+**Process:**
+1. For each hour (00:00, 01:00, ... 23:00) collect features
+2. Feed into trained model
+3. Get prediction in kWh
+4. Add confidence interval (±15%)
 
-**Пример прогноза на 15:00:**
+**Example forecast for 3 PM:**
 ```
-Признаки: hour=15, day_of_week=2 (среда), outdoor_temp=32°C,
-          humidity=45%, occupancy=80, lag_1h=45 кВт·ч...
+Features: hour=15, day_of_week=2 (Wednesday), outdoor_temp=32°C,
+          humidity=45%, occupancy=80, lag_1h=45 kWh...
 
-Модель → Предсказание: 72 кВт·ч
-Confidence: 61-83 кВт·ч (±15%)
+Model → Prediction: 72 kWh
+Confidence: 61-83 kWh (±15%)
 ```
 
-**Автообновление лагов:** При прогнозе на много часов вперёд — предсказанные значения становятся лагами для следующих часов. Это вносит погрешность, поэтому 24-часовой прогноз точнее 168-часового.
+**Auto-updating lags:** When forecasting many hours ahead — predicted values become lags for the next hours. This introduces error, so 24-hour forecast is more accurate than 168-hour.
 
-**Что это даёт:** Facility manager видит кривую "ожидаемое потребление" на завтра и может планировать.
+**What this gives:** Facility manager sees "expected consumption" curve for tomorrow and can plan.
 
 ---
 
@@ -1064,7 +1064,7 @@ def forecast(weather_forecast, occupancy_forecast, last_24h_consumption):
         }
         features.append(feature_row)
 
-    # Предсказание
+    # Prediction
     X = pd.DataFrame(features)[FEATURE_NAMES]
     X_scaled = scaler.transform(X)
     predictions = model.predict(X_scaled)
@@ -1085,44 +1085,44 @@ def forecast(weather_forecast, occupancy_forecast, last_24h_consumption):
 
 ---
 
-#### Простыми словами: Что больше всего влияет на счета за электричество?
+#### In Simple Terms: What Most Affects Electricity Bills?
 
-**Feature Importance** — это рейтинг "важности" каждого признака. Показывает, насколько сильно признак влияет на предсказание.
+**Feature Importance** — a "importance" rating for each feature. Shows how strongly a feature affects the prediction.
 
-**Топ-6 факторов (по данным PLEIAData):**
+**Top 6 factors (from PLEIAData):**
 
-| Место | Признак | Важность | Что это значит |
-|-------|---------|----------|----------------|
-| 1 | `hour` | 22% | Время суток — главный фактор. Пик в 14:00, минимум в 3:00 |
-| 2 | `outdoor_temp` | 18% | Температура снаружи. Каждый градус выше 25°C добавляет ~3% нагрузки |
-| 3 | `occupancy` | 15% | Количество людей. 100 человек = +10 кВт тепла |
-| 4 | `lag_1h` | 12% | Инерция. Потребление не меняется резко |
-| 5 | `rolling_mean_24h` | 10% | Тренд. Если вчера было жарко — сегодня тоже |
-| 6 | `day_of_week` | 8% | День недели. Пятница отличается от понедельника |
+| Rank | Feature | Importance | What it means |
+|------|---------|------------|---------------|
+| 1 | `hour` | 22% | Time of day — main factor. Peak at 2 PM, minimum at 3 AM |
+| 2 | `outdoor_temp` | 18% | Outdoor temperature. Each degree above 25°C adds ~3% load |
+| 3 | `occupancy` | 15% | Number of people. 100 people = +10 kW of heat |
+| 4 | `lag_1h` | 12% | Inertia. Consumption doesn't change abruptly |
+| 5 | `rolling_mean_24h` | 10% | Trend. If yesterday was hot — today too |
+| 6 | `day_of_week` | 8% | Day of week. Friday differs from Monday |
 
-**Практический вывод:**
-- Хотите экономить? Сдвиньте пиковую нагрузку с 14:00 (час — самый важный фактор)
-- В жару фокус на охлаждении (температура — второй фактор)
-- При 50% удалёнке — экономия ~15% (занятость — третий фактор)
+**Practical takeaway:**
+- Want to save? Shift peak load from 2 PM (time is the most important factor)
+- In hot weather focus on cooling (temperature is second factor)
+- With 50% remote work — ~15% savings (occupancy is third factor)
 
 ---
 
 ```python
 feature_importance = {
-    'hour': 0.22,               # Время суток — главный фактор
-    'outdoor_temp': 0.18,       # Температура снаружи
-    'occupancy': 0.15,          # Занятость
-    'lag_1h': 0.12,             # Инерция потребления
-    'rolling_mean_24h': 0.10,   # Тренд
-    'day_of_week': 0.08,        # День недели
-    'solar_radiation': 0.06,    # Солнце
-    'is_weekend': 0.04,         # Выходной
-    'humidity': 0.03,           # Влажность
-    'month': 0.02               # Сезон
+    'hour': 0.22,               # Time of day — main factor
+    'outdoor_temp': 0.18,       # Outdoor temperature
+    'occupancy': 0.15,          # Occupancy
+    'lag_1h': 0.12,             # Consumption inertia
+    'rolling_mean_24h': 0.10,   # Trend
+    'day_of_week': 0.08,        # Day of week
+    'solar_radiation': 0.06,    # Sun
+    'is_weekend': 0.04,         # Weekend
+    'humidity': 0.03,           # Humidity
+    'month': 0.02               # Season
 }
 ```
 
-### 6.6 Baseline прогноз (без обученной модели)
+### 6.6 Baseline Forecast (without trained model)
 
 ```python
 def _baseline_forecast(weather_forecast, occupancy_forecast):
@@ -1130,16 +1130,16 @@ def _baseline_forecast(weather_forecast, occupancy_forecast):
         hour = ts.hour
         temp = weather.get('temperature', 25.0)
 
-        # Базовая нагрузка: 20 kW
+        # Base load: 20 kW
         base = 20.0
 
-        # Occupancy effect (+50% в рабочие часы)
+        # Occupancy effect (+50% during working hours)
         if 8 <= hour <= 18 and weekday:
             occ_factor = 1.0 + (occupancy / 100) * 0.5
         else:
             occ_factor = 0.3
 
-        # Temperature effect (охлаждение/нагрев)
+        # Temperature effect (cooling/heating)
         if temp > 25:
             temp_factor = 1.0 + (temp - 25) * 0.08
         elif temp < 18:
@@ -1160,69 +1160,69 @@ def _baseline_forecast(weather_forecast, occupancy_forecast):
 
 ---
 
-## 7. Источник данных PLEIAData
+## 7. PLEIAData Data Source
 
-**Файл:** `backend/app/services/pleiadata_loader.py`
-
----
-
-#### Простыми словами: Откуда берутся реальные данные
-
-**Что такое PLEIAData:**
-Это открытый датасет от Университета Мурсии (Испания). Они поставили датчики на три университетских здания и собирали данные весь 2021 год. Теперь эти данные доступны всем бесплатно.
-
-**Зачем нам это:**
-- **Реальные данные** — не выдуманные, а измеренные на реальных зданиях
-- **Полный год** — все сезоны, праздники, аномалии
-- **Три здания** — можем сравнивать большое (4500 м²), среднее (2500 м²) и маленькое (1200 м²)
-- **Испания = Средиземноморье** — похоже на южный климат (жаркое лето, мягкая зима)
-
-**Что содержит датасет:**
-1. **Энергопотребление** — почасовое, в кВт·ч (от электросчётчиков)
-2. **Температура внутри** — по зонам здания
-3. **Погода** — температура, влажность, солнце, ветер, осадки
-4. **HVAC статус** — включён/выключен, режим, setpoint
-5. **CO2** — концентрация в ppm (для качества воздуха)
-6. **Присутствие** — датчики движения (для оценки занятости)
-
-**Почему это важно для проекта:**
-- Можем калибровать модели на РЕАЛЬНЫХ данных, а не на "примерах из учебника"
-- Демонстрация на Award: "Это не demo-данные, это реальное здание"
-- Возможность валидации: сравнить прогноз с фактом
+**File:** `backend/app/services/pleiadata_loader.py`
 
 ---
 
-### 7.1 О датасете
+#### In Simple Terms: Where Real Data Comes From
 
-**PLEIAData** — открытый датасет Университета Мурсии (Испания)
+**What is PLEIAData:**
+An open dataset from the University of Murcia (Spain). They installed sensors on three university buildings and collected data throughout 2021. Now this data is available to everyone for free.
+
+**Why we need this:**
+- **Real data** — not invented, but measured on real buildings
+- **Full year** — all seasons, holidays, anomalies
+- **Three buildings** — we can compare large (4500 m²), medium (2500 m²), and small (1200 m²)
+- **Spain = Mediterranean** — similar to southern climate (hot summer, mild winter)
+
+**What the dataset contains:**
+1. **Energy consumption** — hourly, in kWh (from electric meters)
+2. **Indoor temperature** — by building zones
+3. **Weather** — temperature, humidity, sun, wind, precipitation
+4. **HVAC status** — on/off, mode, setpoint
+5. **CO2** — concentration in ppm (for air quality)
+6. **Presence** — motion sensors (for occupancy estimation)
+
+**Why this matters for the project:**
+- We can calibrate models on REAL data, not "textbook examples"
+- Demo at Award: "This is not demo data, this is a real building"
+- Validation capability: compare forecast with actual
+
+---
+
+### 7.1 About the Dataset
+
+**PLEIAData** — open dataset from University of Murcia (Spain)
 - **DOI:** https://zenodo.org/records/7620136
-- **Период:** 1 января — 18 декабря 2021
-- **Здания:** 3 блока университетского кампуса Pleiades
+- **Period:** January 1 — December 18, 2021
+- **Buildings:** 3 blocks of Pleiades university campus
 
-### 7.2 Структура данных
+### 7.2 Data Structure
 
 ```
 pleiadata/
 ├── Data_Nature/
-│   ├── processed_data/          # Обработанные (часовые)
-│   │   ├── consA-60T.csv        # Энергопотребление блока A
+│   ├── processed_data/          # Processed (hourly)
+│   │   ├── consA-60T.csv        # Block A energy consumption
 │   │   ├── consB-60T.csv
 │   │   ├── consC-60T.csv
-│   │   ├── hvac-aggA-60T.csv    # HVAC состояние
+│   │   ├── hvac-aggA-60T.csv    # HVAC state
 │   │   ├── hvac-aggB-60T.csv
 │   │   ├── hvac-aggC-60T.csv
-│   │   ├── temp-sensorA-60T.csv # Температура внутри
+│   │   ├── temp-sensorA-60T.csv # Indoor temperature
 │   │   ├── temp-sensorB-60T.csv
 │   │   ├── temp-sensorC-60T.csv
-│   │   └── data-weather-60T.csv # Погода (общая)
+│   │   └── data-weather-60T.csv # Weather (common)
 │   │
-│   └── raw_data/                # Сырые (минутные)
+│   └── raw_data/                # Raw (minute)
 │       ├── data-CO2.csv         # CO2 (561 MB)
-│       ├── data-hvac.csv        # Детальный HVAC
-│       └── data-presence.csv    # Датчики присутствия
+│       ├── data-hvac.csv        # Detailed HVAC
+│       └── data-presence.csv    # Presence sensors
 ```
 
-### 7.3 Информация о зданиях
+### 7.3 Building Information
 
 ```python
 BUILDING_INFO = {
@@ -1248,72 +1248,72 @@ BUILDING_INFO = {
 }
 ```
 
-### 7.4 Формат CSV файлов
+### 7.4 CSV File Formats
 
-**consA-60T.csv (энергопотребление):**
+**consA-60T.csv (energy consumption):**
 ```csv
 Date;dif_cons_real;cons_total;dif_cons_smooth
 2021-01-01 00:00:00;12.5;12.5;12.3
 2021-01-01 01:00:00;11.2;23.7;11.4
 ...
 ```
-- `dif_cons_real` — почасовое потребление (kWh)
-- `cons_total` — накопленное потребление
-- `dif_cons_smooth` — сглаженное
+- `dif_cons_real` — hourly consumption (kWh)
+- `cons_total` — cumulative consumption
+- `dif_cons_smooth` — smoothed
 
 **hvac-aggA-60T.csv (HVAC):**
 ```csv
 Date;V4;V12;V26;V5_0;V5_1;V5_2
 2021-01-01 00:00:00;1;22.0;3;0;0;1
 ```
-- `V4` — состояние (0=off, 1=on)
-- `V12` — setpoint температура
-- `V26` — режим (0=off, 1=heat, 2=cool, 3=auto)
+- `V4` — state (0=off, 1=on)
+- `V12` — setpoint temperature
+- `V26` — mode (0=off, 1=heat, 2=cool, 3=auto)
 
-**data-weather-60T.csv (погода):**
+**data-weather-60T.csv (weather):**
 ```csv
 Date;tmed;hrmed;radmed;vvmed;dvmed;prec;dewpt;dpv
 2021-01-01 00:00:00;15.2;78;0;2.1;180;0;11.5;0.42
 ```
-- `tmed` — температура (°C)
-- `hrmed` — влажность (%)
-- `radmed` — солнечная радиация
-- `vvmed` — скорость ветра
-- `prec` — осадки
+- `tmed` — temperature (°C)
+- `hrmed` — humidity (%)
+- `radmed` — solar radiation
+- `vvmed` — wind speed
+- `prec` — precipitation
 
-### 7.5 Основные методы загрузчика
+### 7.5 Main Loader Methods
 
 ---
 
-#### Простыми словами: Как код получает данные
+#### In Simple Terms: How Code Gets Data
 
-**PLEIADataLoader** — это "посредник" между CSV файлами и нашими моделями. Он:
-1. Знает, где лежат файлы и как они называются
-2. Читает CSV и конвертирует в удобный формат (pandas DataFrame)
-3. Обрабатывает ошибки (файл не найден, неправильный формат)
-4. Маппит текущую дату на 2021 год (в датасете только 2021)
+**PLEIADataLoader** — a "middleware" between CSV files and our models. It:
+1. Knows where files are and what they're called
+2. Reads CSV and converts to convenient format (pandas DataFrame)
+3. Handles errors (file not found, wrong format)
+4. Maps current date to 2021 (dataset only has 2021)
 
-**Основные методы:**
+**Main methods:**
 
-| Метод | Что делает | Пример использования |
-|-------|------------|---------------------|
-| `load_consumption(block)` | Загружает энергопотребление | `df = loader.load_consumption('a')` |
-| `load_hvac(block)` | Загружает состояние HVAC | Для калибровки модели |
-| `load_temperature(block)` | Загружает температуру внутри | Для сравнения с прогнозом |
-| `load_weather()` | Загружает погоду | Входные данные для симуляции |
-| `load_co2()` | Загружает CO2 | Для страницы IAQ |
-| `get_energy_for_period()` | Энергия за период | Для графиков на дашборде |
-| `get_hvac_status_for_time()` | Статус HVAC в момент | Текущее состояние |
+| Method | What it does | Usage example |
+|--------|--------------|---------------|
+| `load_consumption(block)` | Loads energy consumption | `df = loader.load_consumption('a')` |
+| `load_hvac(block)` | Loads HVAC state | For model calibration |
+| `load_temperature(block)` | Loads indoor temperature | For forecast comparison |
+| `load_weather()` | Loads weather | Input data for simulation |
+| `load_co2()` | Loads CO2 | For IAQ page |
+| `get_energy_for_period()` | Energy for period | For dashboard charts |
+| `get_hvac_status_for_time()` | HVAC status at time | Current state |
 
-**Пример workflow:**
+**Example workflow:**
 ```python
 loader = PLEIADataLoader('/data/pleiadata')
 
-# Загрузить данные для калибровки
-consumption = loader.load_consumption('a')  # DataFrame с датой и kWh
-weather = loader.load_weather()              # DataFrame с погодой
+# Load data for calibration
+consumption = loader.load_consumption('a')  # DataFrame with date and kWh
+weather = loader.load_weather()              # DataFrame with weather
 
-# Откалибровать модель
+# Calibrate model
 model.calibrate_from_pleiadata(loader, building_block='a')
 ```
 
@@ -1322,67 +1322,67 @@ model.calibrate_from_pleiadata(loader, building_block='a')
 ```python
 class PLEIADataLoader:
     def load_consumption(self, block: str) -> DataFrame:
-        """Загрузить энергопотребление."""
+        """Load energy consumption."""
 
     def load_hvac(self, block: str) -> DataFrame:
-        """Загрузить состояние HVAC."""
+        """Load HVAC state."""
 
     def load_temperature(self, block: str) -> DataFrame:
-        """Загрузить температуру внутри."""
+        """Load indoor temperature."""
 
     def load_weather(self) -> DataFrame:
-        """Загрузить погоду."""
+        """Load weather."""
 
     def load_co2(self) -> DataFrame:
-        """Загрузить CO2 (из raw_data)."""
+        """Load CO2 (from raw_data)."""
 
     def get_energy_for_period(self, block, start, end, resolution) -> List[Dict]:
-        """Получить энергию за период с пересэмплингом."""
+        """Get energy for period with resampling."""
 
     def get_hvac_status_for_time(self, block, at_time) -> Dict:
-        """Получить статус HVAC на момент времени."""
+        """Get HVAC status at point in time."""
 
     def get_temperature_for_time(self, block, at_time) -> float:
-        """Получить температуру на момент времени."""
+        """Get temperature at point in time."""
 
     def get_weather_for_time(self, at_time) -> Dict:
-        """Получить погоду на момент времени."""
+        """Get weather at point in time."""
 ```
 
-### 7.6 Маппинг дат
+### 7.6 Date Mapping
 
 ---
 
-#### Простыми словами: Как "обмануть" систему насчёт года
+#### In Simple Terms: How to "Trick" the System About the Year
 
-**Проблема:** В датасете данные только за 2021 год. Но пользователь открывает систему в 2025 году и хочет видеть "сегодняшние" данные.
+**Problem:** The dataset only has 2021 data. But the user opens the system in 2025 and wants to see "today's" data.
 
-**Решение:** Маппим текущую дату на эквивалент в 2021:
-- 6 декабря 2025 → 6 декабря 2021
-- 15 июля 2025 → 15 июля 2021
+**Solution:** Map current date to 2021 equivalent:
+- December 6, 2025 → December 6, 2021
+- July 15, 2025 → July 15, 2021
 
-**Особые случаи:**
-- 29 февраля в високосный год → 28 февраля 2021 (2021 не был високосным)
-- Даты после 18 декабря → используем декабрьские данные (датасет заканчивается 18.12.2021)
+**Special cases:**
+- February 29 in leap year → February 28, 2021 (2021 wasn't a leap year)
+- Dates after December 18 → use December data (dataset ends 12/18/2021)
 
-**Зачем это нужно:**
-- Дашборд показывает "реальные" данные, хотя они исторические
-- Паттерны сохраняются: декабрь 2025 похож на декабрь 2021 по температуре и потреблению
-- Для демо — выглядит как живая система
+**Why this is needed:**
+- Dashboard shows "real" data, even though it's historical
+- Patterns are preserved: December 2025 is similar to December 2021 in temperature and consumption
+- For demo — looks like a live system
 
-**Ограничение:** В production нужно подключать реальные источники данных (BMS, метеосервисы). Маппинг — только для demo и разработки.
+**Limitation:** In production, real data sources (BMS, weather services) need to be connected. Mapping is only for demo and development.
 
 ---
 
-Датасет содержит только 2021 год. Для работы с текущей датой используется маппинг:
+The dataset contains only 2021. For working with current date, mapping is used:
 
 ```python
 def _map_date_to_dataset(self, dt: datetime) -> datetime:
-    """Маппинг любой даты на эквивалент в 2021."""
+    """Map any date to 2021 equivalent."""
     try:
         return dt.replace(year=2021)
     except ValueError:
-        # 29 февраля в високосный год
+        # February 29 in leap year
         return dt.replace(year=2021, day=28)
 ```
 
@@ -1393,75 +1393,75 @@ def _map_date_to_dataset(self, dt: datetime) -> datetime:
 ### 8.1 Buildings API (`/api/v1/buildings`)
 
 ```
-GET  /buildings                    # Список зданий
-GET  /buildings/{id}               # Детали здания
-GET  /buildings/{id}/energy        # Энергопотребление
+GET  /buildings                    # List buildings
+GET  /buildings/{id}               # Building details
+GET  /buildings/{id}/energy        # Energy consumption
      ?resolution=hourly|daily|monthly
-GET  /buildings/{id}/hvac          # Статус HVAC
-GET  /buildings/{id}/iaq           # Качество воздуха
-GET  /buildings/{id}/kpis          # KPI метрики
-GET  /buildings/{id}/equipment     # Оборудование
-GET  /buildings/{id}/alerts        # Предупреждения
-POST /buildings/{id}/setpoints     # Изменить setpoint
+GET  /buildings/{id}/hvac          # HVAC status
+GET  /buildings/{id}/iaq           # Air quality
+GET  /buildings/{id}/kpis          # KPI metrics
+GET  /buildings/{id}/equipment     # Equipment
+GET  /buildings/{id}/alerts        # Alerts
+POST /buildings/{id}/setpoints     # Change setpoint
 ```
 
 ### 8.2 Simulation API (`/api/v1/simulation`)
 
 ```
-POST /simulation/run               # Запуск тепловой симуляции
+POST /simulation/run               # Run thermal simulation
      Body: { building_id, duration_hours, setpoint, hvac_mode }
 
-GET  /simulation/scenarios         # Список 12 сценариев
+GET  /simulation/scenarios         # List 12 scenarios
 
-POST /simulation/scenarios/run     # Запуск сценария
+POST /simulation/scenarios/run     # Run scenario
      Body: { building_id, scenario_id, duration_hours }
 
-POST /simulation/scenarios/custom  # Кастомный сценарий
+POST /simulation/scenarios/custom  # Custom scenario
      Body: { building_id, scenario_type, parameters }
 
-POST /simulation/mpc/optimize      # MPC оптимизация
+POST /simulation/mpc/optimize      # MPC optimization
      Body: { building_id, current_temp, preferred_setpoint, horizon_hours }
 
-GET  /simulation/mpc/quick         # Быстрый MPC (demo)
+GET  /simulation/mpc/quick         # Quick MPC (demo)
      ?building_id=...&current_temp=23&setpoint=22
 
-POST /simulation/forecast          # ML прогноз энергии
+POST /simulation/forecast          # ML energy forecast
      Body: { building_id, horizon_hours }
 
-GET  /simulation/model/status      # Статус моделей
+GET  /simulation/model/status      # Model status
 
-GET  /simulation/roi/calculate     # ROI калькулятор
+GET  /simulation/roi/calculate     # ROI calculator
      ?annual_energy_kwh=...&energy_price_eur=...&savings_percent=...
 ```
 
 ---
 
-## 9. Frontend страницы
+## 9. Frontend Pages
 
 ---
 
-#### Простыми словами: Что видит пользователь
+#### In Simple Terms: What the User Sees
 
-**Кто пользователь:** Facility manager — человек, который отвечает за здание. Не программист. Ему нужны понятные цифры и кнопки, а не код.
+**Who is the user:** Facility manager — a person responsible for the building. Not a programmer. They need understandable numbers and buttons, not code.
 
-**7 страниц = 7 задач:**
-1. **Overview** — "Как дела в здании прямо сейчас?" (5 секунд на оценку)
-2. **Energy** — "Сколько тратим и куда?" (анализ счетов)
-3. **HVAC** — "Какая температура в комнатах?" (управление климатом)
-4. **IAQ** — "Не душно ли сотрудникам?" (здоровье воздуха)
-5. **ESG** — "Соответствуем ли экостандартам?" (отчётность)
-6. **Maintenance** — "Что скоро сломается?" (предупреждение поломок)
-7. **Simulation** — "А что если...?" (планирование и оптимизация)
+**7 pages = 7 tasks:**
+1. **Overview** — "How's the building doing right now?" (5 seconds to assess)
+2. **Energy** — "How much are we spending and where?" (bill analysis)
+3. **HVAC** — "What's the temperature in the rooms?" (climate control)
+4. **IAQ** — "Is it stuffy for employees?" (air health)
+5. **ESG** — "Do we meet eco-standards?" (reporting)
+6. **Maintenance** — "What's about to break?" (breakdown prevention)
+7. **Simulation** — "What if...?" (planning and optimization)
 
-**Принцип дизайна:**
-- Важные цифры — крупно, с цветовой индикацией (зелёный/жёлтый/красный)
-- Графики — для трендов и сравнений
-- Кнопки — для действий (изменить температуру, запустить сценарий)
-- Минимум кликов до нужной информации
+**Design principles:**
+- Important numbers — large, with color indication (green/yellow/red)
+- Charts — for trends and comparisons
+- Buttons — for actions (change temperature, run scenario)
+- Minimum clicks to needed information
 
 ---
 
-### 9.1 Overview (Главная)
+### 9.1 Overview (Main Page)
 - KPI: Energy, Carbon, EUI, Alerts
 - 3D Digital Twin (Three.js)
 - Energy demand chart
@@ -1513,66 +1513,66 @@ GET  /simulation/roi/calculate     # ROI калькулятор
 
 ---
 
-## 10. Бизнес-ценность
+## 10. Business Value
 
 ---
 
-#### Простыми словами: Зачем всё это нужно и кому
+#### In Simple Terms: Why All This is Needed and For Whom
 
-**Главный вопрос руководства:** "Почему мы должны за это платить?"
+**Management's main question:** "Why should we pay for this?"
 
-**Ответ в одном предложении:** Система экономит 15-35% на счетах за электричество, окупается за 18-24 месяца, и дальше — чистая прибыль.
+**Answer in one sentence:** The system saves 15-35% on electricity bills, pays for itself in 18-24 months, and after that — pure profit.
 
-**Три главных бенефита:**
+**Three main benefits:**
 
-1. **Экономия денег** (OPEX reduction)
-   - Автоматическая оптимизация → меньше кВт·ч
-   - Smart scheduling → покупаем энергию в дешёвые часы
-   - Predictive maintenance → нет внезапных поломок
+1. **Money savings** (OPEX reduction)
+   - Automatic optimization → fewer kWh
+   - Smart scheduling → buy energy during cheap hours
+   - Predictive maintenance → no sudden breakdowns
 
-2. **Соответствие нормам** (Compliance)
-   - ESG отчётность → избегаем штрафов
-   - Carbon tracking → готовы к регуляции
-   - LEED/Energy Star → премиум арендаторы
+2. **Compliance**
+   - ESG reporting → avoid fines
+   - Carbon tracking → ready for regulation
+   - LEED/Energy Star → premium tenants
 
-3. **Комфорт сотрудников** (Productivity)
-   - Стабильная температура → меньше жалоб
-   - Чистый воздух (CO2 < 1000 ppm) → +15% когнитивных функций
-   - Автоматизация → facility manager занят важным, а не кнопками
+3. **Employee comfort** (Productivity)
+   - Stable temperature → fewer complaints
+   - Clean air (CO2 < 1000 ppm) → +15% cognitive function
+   - Automation → facility manager focuses on important things, not buttons
 
 ---
 
-### 10.1 Для Facility Manager
+### 10.1 For Facility Manager
 
-| Проблема | Решение EqII |
-|----------|--------------|
-| "Где я трачу энергию?" | Energy breakdown по системам |
-| "Как оптимизировать?" | MPC находит оптимальные setpoints |
-| "Что будет если...?" | 12 сценариев для моделирования |
-| "Когда сломается?" | Predictive maintenance, RUL |
-| "Как доказать начальству?" | ROI калькулятор с NPV |
+| Problem | EqII Solution |
+|---------|---------------|
+| "Where am I spending energy?" | Energy breakdown by systems |
+| "How to optimize?" | MPC finds optimal setpoints |
+| "What if...?" | 12 scenarios for modeling |
+| "When will it break?" | Predictive maintenance, RUL |
+| "How to prove it to management?" | ROI calculator with NPV |
 
-### 10.2 Для CFO
+### 10.2 For CFO
 
-| Метрика | Значение |
-|---------|----------|
-| Экономия энергии | 15-35% |
-| Срок окупаемости | 18-24 месяца |
-| NPV за 5 лет | €50,000-150,000 |
-| Штрафы за ESG | Избежание |
+| Metric | Value |
+|--------|-------|
+| Energy savings | 15-35% |
+| Payback period | 18-24 months |
+| 5-year NPV | €50,000-150,000 |
+| ESG fines | Avoided |
 
-### 10.3 Для CTO
+### 10.3 For CTO
 
-| Характеристика | Значение |
-|----------------|----------|
-| Модель | Physics-based 2R2C (не mock) |
+| Characteristic | Value |
+|----------------|-------|
+| Model | Physics-based 2R2C (not mock) |
 | ML Accuracy | R² > 0.80 |
 | API | REST + WebSocket |
 | Data source | Real university data (PLEIAData) |
 
 ---
 
-## Запуск системы
+## Running the System
 
 ```bash
 # Backend
@@ -1585,24 +1585,24 @@ cd front
 npm install
 npm run dev
 
-# Открыть http://localhost:5173
+# Open http://localhost:5173
 ```
 
 ---
 
-## Ключевые файлы
+## Key Files
 
-| Файл | Описание |
-|------|----------|
-| `backend/app/simulation/thermal_model.py` | 2R2C модель (455 lines) |
-| `backend/app/simulation/mpc_controller.py` | MPC оптимизатор (505 lines) |
-| `backend/app/simulation/scenarios.py` | What-If движок (674 lines) |
-| `backend/app/simulation/forecaster.py` | ML прогноз (537 lines) |
+| File | Description |
+|------|-------------|
+| `backend/app/simulation/thermal_model.py` | 2R2C model (455 lines) |
+| `backend/app/simulation/mpc_controller.py` | MPC optimizer (505 lines) |
+| `backend/app/simulation/scenarios.py` | What-If engine (674 lines) |
+| `backend/app/simulation/forecaster.py` | ML forecast (537 lines) |
 | `backend/app/services/pleiadata_loader.py` | Data loader (519 lines) |
 | `backend/app/api/v1/simulation.py` | API endpoints |
-| `front/pages/Simulation.tsx` | Главная страница симуляции (31.8 KB) |
-| `front/hooks/useSimulation.ts` | React hooks для API |
+| `front/pages/Simulation.tsx` | Main simulation page (31.8 KB) |
+| `front/hooks/useSimulation.ts` | React hooks for API |
 
 ---
 
-*Документация подготовлена для Tech Award 2025*
+*Documentation prepared for Tech Award 2025*
