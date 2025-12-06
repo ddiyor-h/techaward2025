@@ -180,3 +180,64 @@ export interface SetpointResponse {
   applied_settings: Record<string, unknown>;
   message: string;
 }
+
+// Report Types
+export interface ReportIssue {
+  id: string;
+  type: 'equipment' | 'efficiency' | 'comfort' | 'anomaly';
+  severity: 'critical' | 'warning' | 'info';
+  description: string;
+  detected_at: string;
+  status: 'open' | 'resolved';
+  impact_kwh: number;
+  recommendation: string;
+}
+
+export interface ReportOptimization {
+  id: string;
+  name: string;
+  type: 'setpoint' | 'schedule' | 'equipment' | 'demand_response';
+  applied_at: string;
+  energy_impact_percent: number;
+  cost_impact_eur: number;
+  description: string;
+  status: 'active' | 'inactive';
+}
+
+export interface ReportSummary {
+  baseline_energy_kwh: number;
+  actual_energy_kwh: number;
+  energy_saved_kwh: number;
+  energy_saved_percent: number;
+  baseline_cost_eur: number;
+  actual_cost_eur: number;
+  cost_saved_eur: number;
+  co2_baseline_kg: number;
+  co2_actual_kg: number;
+  co2_reduced_kg: number;
+  comfort_score: number;
+  issues_open: number;
+  issues_resolved: number;
+  optimizations_active: number;
+}
+
+export interface BuildingReport {
+  building_id: string;
+  building_name: string;
+  building_info: {
+    floor_area_m2: number;
+    floors: number;
+    location: string;
+  };
+  generated_at: string;
+  period: {
+    type: string;
+    from: string;
+    to: string;
+    days: number;
+  };
+  detected_issues: ReportIssue[];
+  optimizations_applied: ReportOptimization[];
+  summary: ReportSummary;
+  recommendations: string[];
+}

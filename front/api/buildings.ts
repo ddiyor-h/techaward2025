@@ -14,6 +14,7 @@ import type {
   KPIsResponse,
   SetpointUpdateRequest,
   SetpointResponse,
+  BuildingReport,
 } from './types';
 
 const BASE_PATH = '/api/v1/buildings';
@@ -102,5 +103,16 @@ export const buildingsApi = {
       method: 'POST',
       body: JSON.stringify(data),
     });
+  },
+
+  /**
+   * Generate building performance report
+   */
+  generateReport: (
+    buildingId: string,
+    period: 'today' | 'week' | 'month' | 'year' = 'month'
+  ): Promise<BuildingReport> => {
+    const query = buildQueryString({ period });
+    return fetchAPI<BuildingReport>(`/api/v1/reports/${buildingId}${query}`);
   },
 };

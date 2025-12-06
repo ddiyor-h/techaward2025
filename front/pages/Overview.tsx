@@ -1,14 +1,15 @@
-
-import React, { useMemo } from 'react';
+import React, { useMemo, useState } from 'react';
 import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
-import { ArrowDownRight, ArrowUpRight, AlertTriangle, Zap, Wind, Droplets } from 'lucide-react';
+import { ArrowDownRight, ArrowUpRight, AlertTriangle, Zap, Wind, Droplets, FileText } from 'lucide-react';
 import { clsx } from 'clsx';
 import DigitalTwin3D from '../components/DigitalTwin3D';
 import { Loading, ErrorDisplay } from '../components/Loading';
+import ReportModal from '../components/ReportModal';
 import { useTheme } from '../App';
 import { useBuildingContext } from '../context/BuildingContext';
 import { useKpis, useEnergy, useAlerts } from '../hooks/useApi';
-import type { KPIsResponse, EnergyDataResponse, AlertListResponse } from '../api/types';
+import { buildingsApi } from '../api/buildings';
+import type { KPIsResponse, EnergyDataResponse, AlertListResponse, BuildingReport } from '../api/types';
 
 // Transform API KPIs to display format
 function transformKpis(kpis: KPIsResponse) {
@@ -108,6 +109,26 @@ const Overview: React.FC = () => {
   const { data: energyData, loading: energyLoading, error: energyError } = useEnergy(selectedBuildingId, { resolution: 'hourly' });
   const { data: alertsData, loading: alertsLoading, error: alertsError } = useAlerts(selectedBuildingId);
 
+  // Report state
+  const [reportData, setReportData] = useState<BuildingReport | null>(null);
+  const [reportLoading, setReportLoading] = useState(false);
+  const [showReport, setShowReport] = useState(false);
+
+  const handleGenerateReport = async () => {
+    if (!selectedBuildingId) return;
+
+    setReportLoading(true);
+    try {
+      const report = await buildingsApi.generateReport(selectedBuildingId, 'month');
+      setReportData(report);
+      setShowReport(true);
+    } catch (error) {
+      console.error('Failed to generate report:', error);
+    } finally {
+      setReportLoading(false);
+    }
+  };
+
   const kpiMetrics = useMemo(() => {
     if (!kpisData) return [];
     return transformKpis(kpisData);
@@ -147,8 +168,13 @@ const Overview: React.FC = () => {
             <option>Last 7 Days</option>
             <option>Last 30 Days</option>
           </select>
-          <button className="bg-brand-600 hover:bg-brand-700 text-white text-sm font-medium px-4 py-2 rounded transition-colors shadow-sm">
-            Generate Report
+          <button
+            onClick={handleGenerateReport}
+            disabled={reportLoading}
+            className="bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-medium px-4 py-2 rounded transition-colors shadow-sm flex items-center gap-2"
+          >
+            <FileText className="w-4 h-4" />
+            {reportLoading ? 'Generating...' : 'Generate Report'}
           </button>
         </div>
       </div>
@@ -299,6 +325,14 @@ const Overview: React.FC = () => {
         </div>
 
       </div>
+
+      {/* Report Modal */}
+      {showReport && reportData && (
+        <ReportModal
+          report={reportData}
+          onClose={() => setShowReport(false)}
+        />
+      )}
     </div>
   );
 };
