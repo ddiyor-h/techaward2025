@@ -40,8 +40,8 @@ const Header: React.FC<HeaderProps> = ({ onMenuClick }) => {
       <div className="flex items-center gap-4">
         {/* Mobile Logo (Eq II) - Visible only on Mobile */}
         <div className="flex items-center gap-2 md:hidden">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-sm border border-slate-200 dark:border-none">
-               <img src="/assets/eq.png" alt="Eq" className="w-full h-full object-cover" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+               <img src="/assets/eq.png?v=1" alt="Eq" className="w-full h-full object-contain" />
             </div>
             <div className="flex items-center">
               <span className="font-bold text-lg tracking-tight text-slate-900 dark:text-slate-100">Eq</span>

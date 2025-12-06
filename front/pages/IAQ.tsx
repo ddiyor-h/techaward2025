@@ -117,17 +117,32 @@ const IAQ: React.FC = () => {
         <div className="lg:col-span-1 space-y-6">
           <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur p-6 rounded border border-slate-200 dark:border-slate-700 shadow-sm text-center relative overflow-hidden">
              <h3 className="text-slate-500 dark:text-slate-400 font-medium mb-4">Composite AQI Index</h3>
-             <div className="relative w-48 h-24 mx-auto mt-6">
-                <div className="absolute inset-0 rounded-t-full border-[12px] border-slate-200 dark:border-slate-700"></div>
-                <div
-                   className={clsx("absolute inset-0 rounded-t-full border-[12px] border-l-transparent border-b-transparent transition-all duration-1000", aqiStatus.text.replace('text', 'border'))}
-                   style={{ transform: `rotate(${(currentZone.aqi / 200) * 180 - 45}deg)` }}
-                ></div>
-                <div className="absolute bottom-0 left-0 right-0 text-center">
+             <div className="relative w-48 h-28 mx-auto mt-4">
+                <svg viewBox="0 0 120 70" className="w-full h-full">
+                  {/* Background arc */}
+                  <path
+                    d="M 10 60 A 50 50 0 0 1 110 60"
+                    fill="none"
+                    stroke={theme === 'dark' ? '#334155' : '#e2e8f0'}
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                  />
+                  {/* Value arc */}
+                  <path
+                    d="M 10 60 A 50 50 0 0 1 110 60"
+                    fill="none"
+                    stroke={currentZone.aqi <= 50 ? '#10b981' : currentZone.aqi <= 100 ? '#eab308' : currentZone.aqi <= 150 ? '#f97316' : '#ef4444'}
+                    strokeWidth="10"
+                    strokeLinecap="round"
+                    strokeDasharray={`${(Math.min(currentZone.aqi, 200) / 200) * 157} 157`}
+                    className="transition-all duration-1000"
+                  />
+                </svg>
+                <div className="absolute bottom-2 left-0 right-0 text-center">
                    <span className="text-4xl font-bold text-slate-900 dark:text-slate-100">{Math.round(currentZone.aqi)}</span>
                 </div>
              </div>
-             <p className={clsx("mt-4 font-semibold text-lg", aqiStatus.text)}>{aqiStatus.label}</p>
+             <p className={clsx("mt-2 font-semibold text-lg", aqiStatus.text)}>{aqiStatus.label}</p>
              <p className="text-xs text-slate-500 mt-2">Based on PM2.5, CO2, and TVOC levels</p>
           </div>
 

@@ -1,8 +1,7 @@
 import React, { useMemo, useState } from 'react';
-import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, Legend } from 'recharts';
+import { AreaChart, Area, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer } from 'recharts';
 import { ArrowDownRight, ArrowUpRight, AlertTriangle, Zap, Wind, Droplets, FileText } from 'lucide-react';
 import { clsx } from 'clsx';
-import DigitalTwin3D from '../components/DigitalTwin3D';
 import { Loading, ErrorDisplay } from '../components/Loading';
 import ReportModal from '../components/ReportModal';
 import { useTheme } from '../App';
@@ -10,6 +9,24 @@ import { useBuildingContext } from '../context/BuildingContext';
 import { useKpis, useEnergy, useAlerts } from '../hooks/useApi';
 import { buildingsApi } from '../api/buildings';
 import type { KPIsResponse, EnergyDataResponse, AlertListResponse, BuildingReport } from '../api/types';
+
+// Looping video component with optional scale
+const LoopingVideo: React.FC<{ src: string; className?: string; scale?: number }> = ({ src, className, scale = 1 }) => {
+  const scaleStyle = scale !== 1 ? { transform: `scale(${scale})` } : {};
+
+  return (
+    <video
+      src={src}
+      className={className}
+      muted
+      loop
+      autoPlay
+      playsInline
+      preload="auto"
+      style={scaleStyle}
+    />
+  );
+};
 
 // Transform API KPIs to display format
 function transformKpis(kpis: KPIsResponse) {
@@ -49,26 +66,30 @@ function transformKpis(kpis: KPIsResponse) {
   ];
 }
 
-// Transform API energy data to chart format
+// Transform API energy data to chart format - only last 24 data points
 function transformEnergyData(energy: EnergyDataResponse) {
-  return energy.data_points.map((point) => {
+  if (!energy.data_points || energy.data_points.length === 0) {
+    return [];
+  }
+
+  // Sort by timestamp and take ONLY last 24 points
+  const allPoints = [...energy.data_points];
+  allPoints.sort((a, b) => new Date(a.timestamp).getTime() - new Date(b.timestamp).getTime());
+
+  // Take only last 24 points
+  const last24 = allPoints.length > 24 ? allPoints.slice(-24) : allPoints;
+
+  return last24.map((point) => {
     const date = new Date(point.timestamp);
     const hour = date.getHours();
     const timestamp = `${hour.toString().padStart(2, '0')}:00`;
 
-    // Distribute total energy into categories based on typical ratios
     const total = point.value;
-    const hvac = total * 0.55;
-    const lighting = total * 0.25;
-    const equipment = total * 0.20;
 
     return {
       timestamp,
-      hvac: Math.round(hvac),
-      lighting: Math.round(lighting),
-      equipment: Math.round(equipment),
-      total: Math.round(total),
-      predicted: Math.round(total * 0.85),
+      total: Math.round(total * 10) / 10,
+      baseline: Math.round(total * 1.15 * 10) / 10,
     };
   });
 }
@@ -205,125 +226,134 @@ const Overview: React.FC = () => {
         ))}
       </div>
 
-      {/* Main Content Grid */}
-      <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 lg:h-[500px]">
+      {/* Video Visualization Grid */}
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[500px]">
 
-        {/* Left: 3D Twin */}
-        <div className="lg:col-span-2 bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-[400px] lg:h-full flex flex-col">
+        {/* Left: Main Building Overview - static, doesn't change with block selection */}
+        <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-[400px] lg:h-full flex flex-col">
           <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-200">Real-time Digital Twin</h3>
-            <div className="flex gap-2 text-xs">
-              <span className="px-2 py-1 bg-slate-100 dark:bg-slate-700 rounded text-slate-600 dark:text-slate-300 border border-slate-200 dark:border-slate-600">LOD 300</span>
-              <span className="px-2 py-1 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 rounded border border-emerald-200 dark:border-emerald-500/20">Live</span>
-            </div>
+            <h3 className="font-semibold text-slate-900 dark:text-slate-200">Building Overview</h3>
           </div>
-          <div className="flex-1 relative bg-slate-50 dark:bg-gradient-to-b dark:from-slate-900/50 dark:to-slate-900/10">
-             <DigitalTwin3D />
+          <div className="flex-1 relative flex items-center justify-center overflow-hidden" style={{ backgroundColor: 'rgb(35 35 35)' }}>
+            <video
+              src="/assets/main.mp4?v=2"
+              className="w-full h-full object-contain"
+              style={{ transform: 'scale(1.1)' }}
+              muted
+              loop
+              autoPlay
+              playsInline
+              preload="auto"
+            />
           </div>
         </div>
 
-        {/* Right: Charts */}
-        <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm p-5 flex flex-col h-[400px] lg:h-full">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">Energy Demand vs. Prediction</h3>
-          {/* Added w-full and h-full to wrapper to ensure ResponsiveContainer has dimensions */}
-          <div className="flex-1 w-full h-full min-h-0 min-w-0 relative">
-            <ResponsiveContainer width="100%" height="100%">
-              <AreaChart data={chartData} margin={{ top: 10, right: 10, left: 0, bottom: 0 }}>
-                <defs>
-                  <linearGradient id="colorTotal" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#3b82f6" stopOpacity={0}/>
-                  </linearGradient>
-                  <linearGradient id="colorPredicted" x1="0" y1="0" x2="0" y2="1">
-                    <stop offset="5%" stopColor="#10b981" stopOpacity={0.3}/>
-                    <stop offset="95%" stopColor="#10b981" stopOpacity={0}/>
-                  </linearGradient>
-                </defs>
-                <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
-                <XAxis dataKey="timestamp" axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} interval={3} />
-                <YAxis axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} />
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-                    borderRadius: '4px',
-                    border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0',
-                    color: theme === 'dark' ? '#f1f5f9' : '#0f172a'
-                  }}
-                  itemStyle={{ fontSize: '12px' }}
-                />
-                <Area type="monotone" dataKey="total" stroke="#3b82f6" strokeWidth={2} fillOpacity={1} fill="url(#colorTotal)" name="Actual (kW)" />
-                <Area type="monotone" dataKey="predicted" stroke="#10b981" strokeDasharray="4 4" strokeWidth={2} fillOpacity={1} fill="url(#colorPredicted)" name="Optimized (kW)" />
-                <Legend iconType="circle" wrapperStyle={{ fontSize: '12px', paddingTop: '10px', color: '#94a3b8' }} />
-              </AreaChart>
-            </ResponsiveContainer>
+        {/* Right: Selected Block View */}
+        <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-[400px] lg:h-full flex flex-col">
+          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
+            <h3 className="font-semibold text-slate-900 dark:text-slate-200">
+              {selectedBuildingId === 'pleiades-a' ? 'Block A View' :
+               selectedBuildingId === 'pleiades-b' ? 'Block B View' :
+               selectedBuildingId === 'pleiades-c' ? 'Block C View' : 'Block View'}
+            </h3>
+            <div className="flex gap-2 text-xs">
+              <span className="px-2 py-1 bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 rounded border border-blue-200 dark:border-blue-500/20">
+                {selectedBuildingId === 'pleiades-a' ? 'Block A' :
+                 selectedBuildingId === 'pleiades-b' ? 'Block B' :
+                 selectedBuildingId === 'pleiades-c' ? 'Block C' : 'Selected'}
+              </span>
+              <span className="px-2 py-1 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 rounded border border-emerald-200 dark:border-emerald-500/20">Live</span>
+            </div>
+          </div>
+          <div className="flex-1 relative bg-black">
+            <LoopingVideo
+              key={selectedBuildingId}
+              src={selectedBuildingId === 'pleiades-a' ? '/assets/a-block.mp4' :
+                   selectedBuildingId === 'pleiades-b' ? '/assets/b-block.mp4' :
+                   selectedBuildingId === 'pleiades-c' ? '/assets/c-block.mp4' : '/assets/a-block.mp4'}
+              className="w-full h-full object-cover"
+            />
           </div>
         </div>
       </div>
 
-      {/* Bottom Row: Alerts & Systems */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
-
-        {/* Recent Alerts */}
-        <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-200">Recent Alerts</h3>
-            <button className="text-sm text-brand-600 dark:text-brand-500 font-medium hover:text-brand-500 dark:hover:text-brand-400">View All</button>
-          </div>
-          <div className="space-y-3">
-            {alerts.length === 0 ? (
-              <p className="text-sm text-slate-500 dark:text-slate-400 text-center py-4">No recent alerts</p>
-            ) : (
-              alerts.map((alert) => (
-                <div key={alert.id} className="flex gap-4 p-3 rounded hover:bg-slate-50 dark:hover:bg-slate-700/50 transition-colors border border-transparent hover:border-slate-200 dark:hover:border-slate-700">
-                  <div className={clsx(
-                    "w-8 h-8 rounded flex items-center justify-center flex-shrink-0 bg-opacity-10",
-                    alert.severity === 'Critical' ? "bg-red-500 text-red-500" :
-                    alert.severity === 'High' ? "bg-orange-500 text-orange-500" :
-                    "bg-brand-500 text-brand-500"
-                  )}>
-                    <AlertTriangle className="w-4 h-4" />
-                  </div>
-                  <div className="flex-1 min-w-0">
-                    <div className="flex justify-between">
-                      <p className="text-sm font-medium text-slate-900 dark:text-slate-200 truncate">{alert.message}</p>
-                      <span className="text-xs text-slate-500 whitespace-nowrap">{alert.timestamp}</span>
-                    </div>
-                    <p className="text-xs text-slate-500 mt-1">Source: {alert.source}</p>
-                  </div>
-                </div>
-              ))
-            )}
+      {/* Consumption vs. Baseline - Full Width */}
+      <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm p-5">
+        <div className="flex justify-between items-center mb-4">
+          <h3 className="font-semibold text-slate-900 dark:text-slate-200">Consumption vs. Baseline (24h)</h3>
+          <div className="flex gap-4 text-xs">
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
+              <span className="text-slate-600 dark:text-slate-400">Actual</span>
+            </div>
+            <div className="flex items-center gap-1.5">
+              <div className="w-3 h-3 rounded-sm bg-slate-400 border border-dashed border-slate-500"></div>
+              <span className="text-slate-600 dark:text-slate-400">Baseline</span>
+            </div>
           </div>
         </div>
-
-        {/* Load Distribution */}
-         <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-           <div className="flex justify-between items-center mb-4">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-200">System Load Breakdown</h3>
-          </div>
-          <div className="h-64 w-full">
-             <ResponsiveContainer width="100%" height="100%">
-               <BarChart data={chartData.slice(12, 20)} layout="vertical" barSize={16}>
-                 <CartesianGrid strokeDasharray="3 3" horizontal={true} vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.05)" : "rgba(0,0,0,0.05)"} />
-                 <XAxis type="number" hide />
-                 <YAxis dataKey="timestamp" type="category" width={40} axisLine={false} tickLine={false} tick={{fontSize: 11, fill: '#64748b'}} />
-                 <Tooltip
-                  cursor={{fill: theme === 'dark' ? 'rgba(255,255,255,0.02)' : 'rgba(0,0,0,0.02)'}}
-                  contentStyle={{
-                    backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
-                    border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0',
-                    color: theme === 'dark' ? '#f1f5f9' : '#0f172a'
-                  }}
-                 />
-                 <Legend wrapperStyle={{ fontSize: '12px', color: '#94a3b8' }} />
-                 <Bar dataKey="hvac" stackId="a" fill="#3b82f6" name="HVAC" radius={[0, 0, 0, 0]} />
-                 <Bar dataKey="lighting" stackId="a" fill="#f59e0b" name="Lighting" radius={[0, 0, 0, 0]} />
-                 <Bar dataKey="equipment" stackId="a" fill="#64748b" name="Equipment" radius={[0, 2, 2, 0]} />
-               </BarChart>
-             </ResponsiveContainer>
-          </div>
+        <div className="h-80 w-full">
+          <ResponsiveContainer width="100%" height="100%">
+            <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
+              <defs>
+                <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
+                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                </linearGradient>
+              </defs>
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"} />
+              <XAxis
+                dataKey="timestamp"
+                axisLine={false}
+                tickLine={false}
+                tick={{fontSize: 11, fill: theme === 'dark' ? '#94a3b8' : '#64748b'}}
+                interval={3}
+              />
+              <YAxis
+                axisLine={false}
+                tickLine={false}
+                tick={{fontSize: 11, fill: theme === 'dark' ? '#94a3b8' : '#64748b'}}
+                unit=" kW"
+                width={50}
+              />
+              <Tooltip
+                contentStyle={{
+                  backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+                  borderRadius: '8px',
+                  border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0',
+                  color: theme === 'dark' ? '#f1f5f9' : '#0f172a',
+                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                }}
+                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
+                itemStyle={{ fontSize: '12px' }}
+                formatter={(value: number, name: string) => [
+                  `${value} kW`,
+                  name === 'total' ? 'Actual Usage' : 'Baseline'
+                ]}
+              />
+              <Area
+                type="monotone"
+                dataKey="total"
+                stroke="#3b82f6"
+                strokeWidth={2}
+                fillOpacity={1}
+                fill="url(#colorActual)"
+                name="total"
+                dot={false}
+              />
+              <Area
+                type="monotone"
+                dataKey="baseline"
+                stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
+                strokeWidth={2}
+                strokeDasharray="5 5"
+                fillOpacity={0}
+                name="baseline"
+                dot={false}
+              />
+            </AreaChart>
+          </ResponsiveContainer>
         </div>
-
       </div>
 
       {/* Report Modal */}

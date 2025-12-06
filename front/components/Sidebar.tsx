@@ -33,8 +33,8 @@ const Sidebar: React.FC<SidebarProps> = ({ isOpen, onClose }) => {
         {/* Logo */}
         <div className="flex items-center justify-between px-6 h-16 border-b border-slate-200 dark:border-slate-800">
           <div className="flex items-center gap-3">
-            <div className="w-8 h-8 rounded-lg bg-white flex items-center justify-center overflow-hidden shadow-sm border border-slate-200 dark:border-none">
-               <img src="/assets/eq.png" alt="Eq" className="w-full h-full object-cover" />
+            <div className="w-8 h-8 rounded-lg flex items-center justify-center overflow-hidden">
+               <img src="/assets/eq.png?v=1" alt="Eq" className="w-full h-full object-contain" />
             </div>
             <div className="flex items-center">
               <span className="font-bold text-xl tracking-tight text-slate-900 dark:text-slate-100 font-sans">Eq</span>
