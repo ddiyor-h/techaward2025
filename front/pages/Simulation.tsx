@@ -6,10 +6,9 @@ import {
 } from 'recharts';
 import {
   Thermometer, Users, Sun, Zap, Calculator, TrendingDown,
-  Play, Loader2, Check, AlertTriangle, ChevronRight
+  Play, Loader2, Check, AlertTriangle, ChevronRight, BarChart3
 } from 'lucide-react';
 import { clsx } from 'clsx';
-import { useTheme } from '../App';
 import { useBuildingContext } from '../context/BuildingContext';
 import {
   useScenarios,
@@ -44,7 +43,6 @@ const SCENARIO_ICONS: Record<string, React.FC<{ className?: string }>> = {
 };
 
 const Simulation: React.FC = () => {
-  const { theme } = useTheme();
   const { selectedBuildingId } = useBuildingContext();
 
   const [activeTab, setActiveTab] = useState<TabType>('scenarios');
@@ -89,7 +87,7 @@ const Simulation: React.FC = () => {
   const tabs: { id: TabType; label: string; icon: React.FC<{ className?: string }> }[] = [
     { id: 'scenarios', label: 'What-If Scenarios', icon: Thermometer },
     { id: 'mpc', label: 'MPC Optimization', icon: TrendingDown },
-    { id: 'forecast', label: 'Energy Forecast', icon: AreaChart as any },
+    { id: 'forecast', label: 'Energy Forecast', icon: BarChart3 },
     { id: 'roi', label: 'ROI Calculator', icon: Calculator },
   ];
 
@@ -98,25 +96,25 @@ const Simulation: React.FC = () => {
       {/* Header */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div>
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">
+          <h1 className="text-2xl font-bold text-white tracking-tight">
             Digital Twin Simulation
           </h1>
-          <p className="text-slate-500 dark:text-slate-400 text-sm mt-1">
+          <p className="text-white/50 text-sm mt-1">
             Test scenarios, optimize operations, and forecast energy consumption
           </p>
         </div>
         <div className="flex gap-2">
-          <span className="px-3 py-1 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 rounded-full text-xs font-medium border border-emerald-200 dark:border-emerald-500/20">
+          <span className="px-3 py-1 bg-emerald-500/20 text-emerald-400 rounded-full text-xs font-medium border border-emerald-500/30">
             2R2C Model Calibrated
           </span>
-          <span className="px-3 py-1 bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 rounded-full text-xs font-medium border border-blue-200 dark:border-blue-500/20">
+          <span className="px-3 py-1 bg-blue-500/20 text-blue-400 rounded-full text-xs font-medium border border-blue-500/30">
             R² = 0.85
           </span>
         </div>
       </div>
 
       {/* Tab Navigation */}
-      <div className="flex gap-1 bg-white dark:bg-slate-800 p-1 rounded-lg border border-slate-200 dark:border-slate-700 overflow-x-auto">
+      <div className="flex gap-1 bg-black/30 backdrop-blur-md p-1 rounded-lg border border-white/10 overflow-x-auto">
         {tabs.map((tab) => {
           const Icon = tab.icon;
           return (
@@ -126,8 +124,8 @@ const Simulation: React.FC = () => {
               className={clsx(
                 "flex items-center gap-2 px-4 py-2 rounded-md text-sm font-medium transition-colors whitespace-nowrap",
                 activeTab === tab.id
-                  ? "bg-brand-500 text-white shadow-sm"
-                  : "text-slate-600 dark:text-slate-400 hover:bg-slate-100 dark:hover:bg-slate-700"
+                  ? "bg-emerald-500/20 text-emerald-400 border border-emerald-500/30"
+                  : "text-white/60 hover:bg-white/5 hover:text-white"
               )}
             >
               <Icon className="w-4 h-4" />
@@ -147,7 +145,6 @@ const Simulation: React.FC = () => {
             onSelectScenario={handleScenarioSelect}
             result={scenarioResult}
             running={scenarioRunning}
-            theme={theme}
           />
         )}
 
@@ -156,7 +153,6 @@ const Simulation: React.FC = () => {
             result={mpcResult}
             loading={mpcLoading}
             onRefresh={() => runMPC(selectedBuildingId, 23, 22, 24)}
-            theme={theme}
           />
         )}
 
@@ -165,7 +161,6 @@ const Simulation: React.FC = () => {
             result={forecastResult}
             loading={forecastLoading}
             onRefresh={() => getForecast(selectedBuildingId, 24)}
-            theme={theme}
           />
         )}
 
@@ -191,20 +186,19 @@ const ScenariosTab: React.FC<{
   onSelectScenario: (id: string) => void;
   result: ScenarioResult | null;
   running: boolean;
-  theme: string;
-}> = ({ scenarios, loading, selectedScenario, onSelectScenario, result, running, theme }) => {
+}> = ({ scenarios, loading, selectedScenario, onSelectScenario, result, running }) => {
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-brand-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
   }
 
   return (
     <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
       {/* Scenario List */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-800/50">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-200">Select Scenario</h3>
+      <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 overflow-hidden">
+        <div className="p-4 border-b border-white/10 bg-black/20">
+          <h3 className="font-semibold text-white">Select Scenario</h3>
         </div>
-        <div className="divide-y divide-slate-100 dark:divide-slate-700/50 max-h-[500px] overflow-y-auto">
+        <div className="divide-y divide-white/5 max-h-[500px] overflow-y-auto scrollbar-thin scrollbar-track-transparent scrollbar-thumb-emerald-500/30 hover:scrollbar-thumb-emerald-500/50">
           {scenarios.map((scenario) => {
             const Icon = SCENARIO_ICONS[scenario.icon] || Thermometer;
             const isSelected = selectedScenario === scenario.id;
@@ -218,32 +212,32 @@ const ScenariosTab: React.FC<{
                 className={clsx(
                   "w-full text-left p-4 transition-colors",
                   isSelected
-                    ? "bg-brand-50 dark:bg-brand-500/10 border-l-4 border-brand-500"
-                    : "hover:bg-slate-50 dark:hover:bg-slate-700/30 border-l-4 border-transparent"
+                    ? "bg-emerald-500/10 border-l-4 border-emerald-500"
+                    : "hover:bg-white/5 border-l-4 border-transparent"
                 )}
               >
                 <div className="flex items-start gap-3">
                   <div className={clsx(
                     "p-2 rounded-lg",
                     savingsPositive
-                      ? "bg-emerald-100 dark:bg-emerald-500/10 text-emerald-600 dark:text-emerald-400"
-                      : "bg-amber-100 dark:bg-amber-500/10 text-amber-600 dark:text-amber-400"
+                      ? "bg-emerald-500/20 text-emerald-400"
+                      : "bg-amber-500/20 text-amber-400"
                   )}>
                     <Icon className="w-4 h-4" />
                   </div>
                   <div className="flex-1 min-w-0">
                     <div className="flex items-center justify-between">
-                      <p className="font-medium text-slate-900 dark:text-slate-200 truncate">{scenario.name}</p>
+                      <p className="font-medium text-white truncate">{scenario.name}</p>
                       <span className={clsx(
                         "text-xs font-medium px-2 py-0.5 rounded",
                         savingsPositive
-                          ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-                          : "bg-amber-100 text-amber-600 dark:bg-amber-500/10 dark:text-amber-400"
+                          ? "bg-emerald-500/20 text-emerald-400"
+                          : "bg-amber-500/20 text-amber-400"
                       )}>
                         {savingsPositive ? '-' : '+'}{Math.abs(scenario.estimated_savings_percent)}%
                       </span>
                     </div>
-                    <p className="text-xs text-slate-500 dark:text-slate-400 mt-1 line-clamp-2">
+                    <p className="text-xs text-white/50 mt-1 line-clamp-2">
                       {scenario.description}
                     </p>
                   </div>
@@ -257,10 +251,10 @@ const ScenariosTab: React.FC<{
       {/* Results */}
       <div className="lg:col-span-2 space-y-6">
         {running && (
-          <div className="flex items-center justify-center h-64 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-center h-64 bg-black/30 backdrop-blur-md rounded-lg border border-white/10">
             <div className="text-center">
-              <Loader2 className="w-8 h-8 animate-spin text-brand-500 mx-auto mb-3" />
-              <p className="text-slate-500 dark:text-slate-400">Running simulation...</p>
+              <Loader2 className="w-8 h-8 animate-spin text-emerald-500 mx-auto mb-3" />
+              <p className="text-white/50">Running simulation...</p>
             </div>
           </div>
         )}
@@ -296,26 +290,28 @@ const ScenariosTab: React.FC<{
             </div>
 
             {/* Chart */}
-            <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">Energy Comparison</h3>
+            <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-6">
+              <h3 className="font-semibold text-white mb-4">Energy Comparison</h3>
               <div className="h-[300px]">
                 <ResponsiveContainer width="100%" height="100%">
                   <AreaChart data={result.baseline_timeline.map((b, i) => ({
                     ...b,
                     scenario_energy: result.scenario_timeline[i]?.energy_cumulative || 0
                   }))}>
-                    <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
+                    <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
                     <XAxis
                       dataKey="timestamp"
                       tickFormatter={(t) => new Date(t).toLocaleTimeString([], { hour: '2-digit' })}
-                      stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
+                      stroke="rgba(255,255,255,0.4)"
                     />
-                    <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} />
+                    <YAxis stroke="rgba(255,255,255,0.4)" />
                     <Tooltip
                       contentStyle={{
-                        backgroundColor: theme === 'dark' ? '#1e293b' : '#fff',
-                        border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-                        color: theme === 'dark' ? '#f1f5f9' : '#0f172a'
+                        backgroundColor: 'rgba(0,0,0,0.8)',
+                        backdropFilter: 'blur(12px)',
+                        border: '1px solid rgba(255,255,255,0.1)',
+                        borderRadius: '8px',
+                        color: '#fff'
                       }}
                     />
                     <Legend />
@@ -327,13 +323,13 @@ const ScenariosTab: React.FC<{
             </div>
 
             {/* Recommendations */}
-            <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">AI Recommendations</h3>
+            <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-6">
+              <h3 className="font-semibold text-white mb-4">AI Recommendations</h3>
               <div className="space-y-3">
                 {result.recommendations.map((rec, i) => (
-                  <div key={i} className="flex items-start gap-3 p-3 bg-slate-50 dark:bg-slate-700/30 rounded-lg">
+                  <div key={i} className="flex items-start gap-3 p-3 bg-black/20 border border-white/5 rounded-lg">
                     <Check className="w-5 h-5 text-emerald-500 flex-shrink-0 mt-0.5" />
-                    <p className="text-sm text-slate-700 dark:text-slate-300">{rec}</p>
+                    <p className="text-sm text-white/70">{rec}</p>
                   </div>
                 ))}
               </div>
@@ -342,10 +338,10 @@ const ScenariosTab: React.FC<{
         )}
 
         {!running && !result && (
-          <div className="flex items-center justify-center h-64 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-center h-64 bg-black/30 backdrop-blur-md rounded-lg border border-white/10">
             <div className="text-center">
-              <Thermometer className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-500 dark:text-slate-400">Select a scenario to run simulation</p>
+              <Thermometer className="w-12 h-12 text-white/20 mx-auto mb-3" />
+              <p className="text-white/50">Select a scenario to run simulation</p>
             </div>
           </div>
         )}
@@ -359,10 +355,9 @@ const MPCTab: React.FC<{
   result: MPCResult | null;
   loading: boolean;
   onRefresh: () => void;
-  theme: string;
-}> = ({ result, loading, onRefresh, theme }) => {
+}> = ({ result, loading, onRefresh }) => {
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-brand-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
   }
 
   if (!result) return null;
@@ -398,39 +393,39 @@ const MPCTab: React.FC<{
       </div>
 
       {/* Schedule Table */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 overflow-hidden">
-        <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-200">Optimal Setpoint Schedule</h3>
+      <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 overflow-hidden">
+        <div className="p-4 border-b border-white/10 flex justify-between items-center">
+          <h3 className="font-semibold text-white">Optimal Setpoint Schedule</h3>
           <span className={clsx(
-            "px-2 py-1 text-xs font-medium rounded",
+            "px-2 py-1 text-xs font-medium rounded border",
             result.optimization_status === 'optimal'
-              ? "bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400"
-              : "bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400"
+              ? "bg-emerald-500/20 text-emerald-400 border-emerald-500/30"
+              : "bg-blue-500/20 text-blue-400 border-blue-500/30"
           )}>
             {result.optimization_status}
           </span>
         </div>
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="bg-slate-50 dark:bg-slate-800/50">
+            <thead className="bg-black/20">
               <tr>
-                <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400">Hour</th>
-                <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400">Setpoint</th>
-                <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400">Predicted T</th>
-                <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400">Power</th>
-                <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400">Price</th>
-                <th className="px-4 py-3 text-left text-slate-500 dark:text-slate-400">Occupancy</th>
+                <th className="px-4 py-3 text-left text-white/50">Hour</th>
+                <th className="px-4 py-3 text-left text-white/50">Setpoint</th>
+                <th className="px-4 py-3 text-left text-white/50">Predicted T</th>
+                <th className="px-4 py-3 text-left text-white/50">Power</th>
+                <th className="px-4 py-3 text-left text-white/50">Price</th>
+                <th className="px-4 py-3 text-left text-white/50">Occupancy</th>
               </tr>
             </thead>
-            <tbody className="divide-y divide-slate-100 dark:divide-slate-700/50">
+            <tbody className="divide-y divide-white/5">
               {result.schedule.slice(0, 12).map((item, i) => (
-                <tr key={i} className="hover:bg-slate-50 dark:hover:bg-slate-700/30">
-                  <td className="px-4 py-3 font-medium text-slate-900 dark:text-slate-200">{item.hour}:00</td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{item.setpoint}°C</td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{item.predicted_temp}°C</td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{item.predicted_power_kw.toFixed(1)} kW</td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">€{item.electricity_price.toFixed(3)}</td>
-                  <td className="px-4 py-3 text-slate-700 dark:text-slate-300">{item.occupancy}</td>
+                <tr key={i} className="hover:bg-white/5">
+                  <td className="px-4 py-3 font-medium text-white">{item.hour}:00</td>
+                  <td className="px-4 py-3 text-white/70">{item.setpoint}°C</td>
+                  <td className="px-4 py-3 text-white/70">{item.predicted_temp}°C</td>
+                  <td className="px-4 py-3 text-white/70">{item.predicted_power_kw.toFixed(1)} kW</td>
+                  <td className="px-4 py-3 text-white/70">€{item.electricity_price.toFixed(3)}</td>
+                  <td className="px-4 py-3 text-white/70">{item.occupancy}</td>
                 </tr>
               ))}
             </tbody>
@@ -439,25 +434,27 @@ const MPCTab: React.FC<{
       </div>
 
       {/* Chart */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-        <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">Optimization Results</h3>
+      <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="font-semibold text-white mb-4">Optimization Results</h3>
         <div className="h-[300px]">
           <ResponsiveContainer width="100%" height="100%">
             <LineChart data={result.schedule}>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
-              <XAxis dataKey="hour" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} />
-              <YAxis yAxisId="left" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} />
-              <YAxis yAxisId="right" orientation="right" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="hour" stroke="rgba(255,255,255,0.4)" />
+              <YAxis yAxisId="left" stroke="rgba(255,255,255,0.4)" />
+              <YAxis yAxisId="right" orientation="right" stroke="rgba(255,255,255,0.4)" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: theme === 'dark' ? '#1e293b' : '#fff',
-                  border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-                  color: theme === 'dark' ? '#f1f5f9' : '#0f172a'
+                  backgroundColor: 'rgba(0,0,0,0.8)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: '#fff'
                 }}
               />
               <Legend />
               <Line yAxisId="left" type="monotone" dataKey="setpoint" name="Setpoint (°C)" stroke="#3b82f6" strokeWidth={2} />
-              <Line yAxisId="left" type="monotone" dataKey="outdoor_temp" name="Outdoor (°C)" stroke="#94a3b8" strokeDasharray="5 5" />
+              <Line yAxisId="left" type="monotone" dataKey="outdoor_temp" name="Outdoor (°C)" stroke="rgba(255,255,255,0.4)" strokeDasharray="5 5" />
               <Line yAxisId="right" type="monotone" dataKey="electricity_price" name="Price (€)" stroke="#f59e0b" strokeWidth={2} />
             </LineChart>
           </ResponsiveContainer>
@@ -472,10 +469,9 @@ const ForecastTab: React.FC<{
   result: ForecastResult | null;
   loading: boolean;
   onRefresh: () => void;
-  theme: string;
-}> = ({ result, loading, onRefresh, theme }) => {
+}> = ({ result, loading, onRefresh }) => {
   if (loading) {
-    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-brand-500" /></div>;
+    return <div className="flex items-center justify-center h-64"><Loader2 className="w-8 h-8 animate-spin text-emerald-500" /></div>;
   }
 
   if (!result) return null;
@@ -518,24 +514,26 @@ const ForecastTab: React.FC<{
       </div>
 
       {/* Forecast Chart */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-        <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">24-Hour Energy Forecast</h3>
+      <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="font-semibold text-white mb-4">24-Hour Energy Forecast</h3>
         <div className="h-[350px]">
           <ResponsiveContainer width="100%" height="100%">
             <AreaChart data={chartData}>
-              <CartesianGrid strokeDasharray="3 3" stroke={theme === 'dark' ? '#334155' : '#e2e8f0'} />
-              <XAxis dataKey="time" stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} />
-              <YAxis stroke={theme === 'dark' ? '#94a3b8' : '#64748b'} />
+              <CartesianGrid strokeDasharray="3 3" stroke="rgba(255,255,255,0.06)" />
+              <XAxis dataKey="time" stroke="rgba(255,255,255,0.4)" />
+              <YAxis stroke="rgba(255,255,255,0.4)" />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: theme === 'dark' ? '#1e293b' : '#fff',
-                  border: `1px solid ${theme === 'dark' ? '#334155' : '#e2e8f0'}`,
-                  color: theme === 'dark' ? '#f1f5f9' : '#0f172a'
+                  backgroundColor: 'rgba(0,0,0,0.8)',
+                  backdropFilter: 'blur(12px)',
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  borderRadius: '8px',
+                  color: '#fff'
                 }}
               />
               <Legend />
-              <Area type="monotone" dataKey="upper" name="Upper Bound" stroke="none" fill="#3b82f620" />
-              <Area type="monotone" dataKey="predicted" name="Predicted" stroke="#3b82f6" fill="#3b82f640" strokeWidth={2} />
+              <Area type="monotone" dataKey="upper" name="Upper Bound" stroke="none" fill="rgba(16, 185, 129, 0.1)" />
+              <Area type="monotone" dataKey="predicted" name="Predicted" stroke="#10b981" fill="rgba(16, 185, 129, 0.2)" strokeWidth={2} />
               <Area type="monotone" dataKey="lower" name="Lower Bound" stroke="none" fill="transparent" />
             </AreaChart>
           </ResponsiveContainer>
@@ -543,24 +541,24 @@ const ForecastTab: React.FC<{
       </div>
 
       {/* Feature Importance */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-        <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">Feature Importance</h3>
+      <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="font-semibold text-white mb-4">Feature Importance</h3>
         <div className="space-y-3">
           {Object.entries(result.feature_importance)
             .sort(([, a], [, b]) => (b as number) - (a as number))
             .slice(0, 6)
             .map(([feature, importance]) => (
               <div key={feature} className="flex items-center gap-3">
-                <span className="w-32 text-sm text-slate-600 dark:text-slate-400 capitalize">
+                <span className="w-32 text-sm text-white/50 capitalize">
                   {feature.replace(/_/g, ' ')}
                 </span>
-                <div className="flex-1 h-2 bg-slate-100 dark:bg-slate-700 rounded-full overflow-hidden">
+                <div className="flex-1 h-2 bg-white/10 rounded-full overflow-hidden">
                   <div
-                    className="h-full bg-brand-500 rounded-full"
+                    className="h-full bg-emerald-500 rounded-full"
                     style={{ width: `${(importance as number) * 100}%` }}
                   />
                 </div>
-                <span className="text-sm font-medium text-slate-900 dark:text-slate-200 w-12">
+                <span className="text-sm font-medium text-white w-12">
                   {((importance as number) * 100).toFixed(0)}%
                 </span>
               </div>
@@ -582,59 +580,59 @@ const ROITab: React.FC<{
   return (
     <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
       {/* Input Form */}
-      <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-        <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-6">ROI Parameters</h3>
+      <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-6">
+        <h3 className="font-semibold text-white mb-6">ROI Parameters</h3>
         <div className="space-y-4">
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400">Annual Energy (kWh)</label>
+            <label className="text-sm text-white/50">Annual Energy (kWh)</label>
             <input
               type="number"
               value={params.annual_energy_kwh}
               onChange={(e) => setParams({ ...params, annual_energy_kwh: +e.target.value })}
-              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-200"
+              className="w-full mt-1 px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50"
             />
           </div>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400">Energy Price (EUR/kWh)</label>
+            <label className="text-sm text-white/50">Energy Price (EUR/kWh)</label>
             <input
               type="number"
               step="0.01"
               value={params.energy_price_eur}
               onChange={(e) => setParams({ ...params, energy_price_eur: +e.target.value })}
-              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-200"
+              className="w-full mt-1 px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50"
             />
           </div>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400">Expected Savings (%)</label>
+            <label className="text-sm text-white/50">Expected Savings (%)</label>
             <input
               type="number"
               value={params.savings_percent}
               onChange={(e) => setParams({ ...params, savings_percent: +e.target.value })}
-              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-200"
+              className="w-full mt-1 px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50"
             />
           </div>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400">Implementation Cost (EUR)</label>
+            <label className="text-sm text-white/50">Implementation Cost (EUR)</label>
             <input
               type="number"
               value={params.implementation_cost_eur}
               onChange={(e) => setParams({ ...params, implementation_cost_eur: +e.target.value })}
-              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-200"
+              className="w-full mt-1 px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50"
             />
           </div>
           <div>
-            <label className="text-sm text-slate-600 dark:text-slate-400">Annual Maintenance (EUR)</label>
+            <label className="text-sm text-white/50">Annual Maintenance (EUR)</label>
             <input
               type="number"
               value={params.maintenance_cost_eur}
               onChange={(e) => setParams({ ...params, maintenance_cost_eur: +e.target.value })}
-              className="w-full mt-1 px-3 py-2 bg-slate-50 dark:bg-slate-700 border border-slate-200 dark:border-slate-600 rounded-lg text-slate-900 dark:text-slate-200"
+              className="w-full mt-1 px-3 py-2 bg-black/30 border border-white/10 rounded-lg text-white focus:outline-none focus:border-emerald-500/50"
             />
           </div>
           <button
             onClick={onCalculate}
             disabled={loading}
-            className="w-full py-2 bg-brand-500 hover:bg-brand-600 text-white rounded-lg font-medium transition-colors flex items-center justify-center gap-2"
+            className="w-full py-2 bg-emerald-500/20 hover:bg-emerald-500/30 text-emerald-400 rounded-lg font-medium transition-colors flex items-center justify-center gap-2 border border-emerald-500/30"
           >
             {loading ? <Loader2 className="w-4 h-4 animate-spin" /> : <Calculator className="w-4 h-4" />}
             Calculate ROI
@@ -673,24 +671,24 @@ const ROITab: React.FC<{
               />
             </div>
 
-            <div className="bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700 p-6">
-              <h3 className="font-semibold text-slate-900 dark:text-slate-200 mb-4">Investment Summary</h3>
+            <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-6">
+              <h3 className="font-semibold text-white mb-4">Investment Summary</h3>
               <div className="space-y-3">
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                  <span className="text-slate-600 dark:text-slate-400">Annual Energy Cost</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-200">€{result.annual_energy_cost_eur.toLocaleString()}</span>
+                <div className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-white/50">Annual Energy Cost</span>
+                  <span className="font-medium text-white">€{result.annual_energy_cost_eur.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                  <span className="text-slate-600 dark:text-slate-400">Net Annual Savings</span>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">€{result.net_annual_savings_eur.toLocaleString()}</span>
+                <div className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-white/50">Net Annual Savings</span>
+                  <span className="font-medium text-emerald-400">€{result.net_annual_savings_eur.toLocaleString()}</span>
                 </div>
-                <div className="flex justify-between py-2 border-b border-slate-100 dark:border-slate-700">
-                  <span className="text-slate-600 dark:text-slate-400">5-Year Total Savings</span>
-                  <span className="font-medium text-emerald-600 dark:text-emerald-400">€{result['5_year_total_savings_eur'].toLocaleString()}</span>
+                <div className="flex justify-between py-2 border-b border-white/10">
+                  <span className="text-white/50">5-Year Total Savings</span>
+                  <span className="font-medium text-emerald-400">€{result['5_year_total_savings_eur'].toLocaleString()}</span>
                 </div>
                 <div className="flex justify-between py-2">
-                  <span className="text-slate-600 dark:text-slate-400">IRR</span>
-                  <span className="font-medium text-slate-900 dark:text-slate-200">{result.irr_percent.toFixed(1)}%</span>
+                  <span className="text-white/50">IRR</span>
+                  <span className="font-medium text-white">{result.irr_percent.toFixed(1)}%</span>
                 </div>
               </div>
             </div>
@@ -698,10 +696,10 @@ const ROITab: React.FC<{
         )}
 
         {!result && (
-          <div className="flex items-center justify-center h-64 bg-white dark:bg-slate-800/50 rounded-lg border border-slate-200 dark:border-slate-700">
+          <div className="flex items-center justify-center h-64 bg-black/30 backdrop-blur-md rounded-lg border border-white/10">
             <div className="text-center">
-              <Calculator className="w-12 h-12 text-slate-300 dark:text-slate-600 mx-auto mb-3" />
-              <p className="text-slate-500 dark:text-slate-400">Enter parameters and calculate ROI</p>
+              <Calculator className="w-12 h-12 text-white/20 mx-auto mb-3" />
+              <p className="text-white/50">Enter parameters and calculate ROI</p>
             </div>
           </div>
         )}
@@ -718,19 +716,19 @@ const MetricCard: React.FC<{
   positive: boolean;
 }> = ({ label, value, subvalue, positive }) => (
   <div className={clsx(
-    "bg-white dark:bg-slate-800/50 p-4 rounded-lg border",
+    "bg-black/30 backdrop-blur-md p-4 rounded-lg border",
     positive
-      ? "border-emerald-200 dark:border-emerald-500/20"
-      : "border-amber-200 dark:border-amber-500/20"
+      ? "border-emerald-500/20"
+      : "border-amber-500/20"
   )}>
-    <p className="text-xs text-slate-500 dark:text-slate-400 uppercase tracking-wide mb-1">{label}</p>
+    <p className="text-xs text-white/50 uppercase tracking-wide mb-1">{label}</p>
     <p className={clsx(
       "text-2xl font-bold",
-      positive ? "text-emerald-600 dark:text-emerald-400" : "text-amber-600 dark:text-amber-400"
+      positive ? "text-emerald-400" : "text-amber-400"
     )}>
       {value}
     </p>
-    <p className="text-xs text-slate-500 dark:text-slate-400">{subvalue}</p>
+    <p className="text-xs text-white/50">{subvalue}</p>
   </div>
 );
 

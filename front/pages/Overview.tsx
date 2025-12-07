@@ -4,7 +4,6 @@ import { ArrowDownRight, ArrowUpRight, AlertTriangle, Zap, Wind, Droplets, FileT
 import { clsx } from 'clsx';
 import { Loading, ErrorDisplay } from '../components/Loading';
 import ReportModal from '../components/ReportModal';
-import { useTheme } from '../App';
 import { useBuildingContext } from '../context/BuildingContext';
 import { useKpis, useEnergy, useAlerts } from '../hooks/useApi';
 import { buildingsApi } from '../api/buildings';
@@ -123,7 +122,6 @@ function transformAlerts(alertsData: AlertListResponse) {
 }
 
 const Overview: React.FC = () => {
-  const { theme } = useTheme();
   const { selectedBuildingId, loading: buildingLoading } = useBuildingContext();
 
   const { data: kpisData, loading: kpisLoading, error: kpisError } = useKpis(selectedBuildingId, 'today');
@@ -178,13 +176,13 @@ const Overview: React.FC = () => {
 
   return (
     <div className="space-y-6">
-      {/* Header Section - Mobile Optimized (Left Aligned Buttons) */}
+      {/* Header Section */}
       <div className="flex flex-col md:flex-row md:items-center justify-between gap-4">
         <div className="w-full">
-          <h1 className="text-2xl font-bold text-slate-900 dark:text-slate-100 tracking-tight">Dashboard Overview</h1>
+          <h1 className="text-2xl font-bold text-white tracking-tight">Dashboard Overview</h1>
         </div>
         <div className="w-full md:w-auto flex justify-start md:justify-end gap-2 mt-2 md:mt-0">
-          <select className="bg-white dark:bg-slate-800 border border-slate-200 dark:border-slate-700 text-slate-900 dark:text-slate-200 text-sm rounded px-3 py-2 focus:ring-1 focus:ring-brand-500 outline-none hover:bg-slate-50 dark:hover:bg-slate-700 transition-colors">
+          <select className="bg-black/40 backdrop-blur border border-white/10 text-white/80 text-sm rounded px-3 py-2 focus:ring-1 focus:ring-emerald-500 outline-none hover:bg-white/5 transition-colors">
             <option>Last 24 Hours</option>
             <option>Last 7 Days</option>
             <option>Last 30 Days</option>
@@ -192,7 +190,7 @@ const Overview: React.FC = () => {
           <button
             onClick={handleGenerateReport}
             disabled={reportLoading}
-            className="bg-brand-600 hover:bg-brand-700 disabled:bg-brand-400 text-white text-sm font-medium px-4 py-2 rounded transition-colors shadow-sm flex items-center gap-2"
+            className="bg-emerald-600 hover:bg-emerald-500 disabled:bg-emerald-800 text-white text-sm font-medium px-4 py-2 rounded transition-colors flex items-center gap-2"
           >
             <FileText className="w-4 h-4" />
             {reportLoading ? 'Generating...' : 'Generate Report'}
@@ -200,26 +198,29 @@ const Overview: React.FC = () => {
         </div>
       </div>
 
-      {/* KPI Cards */}
+      {/* KPI Cards - Glass morphism style */}
       <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
         {kpiMetrics.map((kpi) => (
-          <div key={kpi.id} className="bg-white dark:bg-slate-800/50 dark:backdrop-blur p-5 rounded border border-slate-200 dark:border-slate-700 shadow-sm">
-            <div className="flex justify-between items-start mb-2">
-              <span className="text-slate-500 dark:text-slate-400 text-sm font-medium">{kpi.label}</span>
-              {kpi.id === '1' && <Zap className="w-4 h-4 text-brand-500 dark:text-brand-400" />}
-              {kpi.id === '2' && <Wind className="w-4 h-4 text-emerald-500 dark:text-emerald-400" />}
-              {kpi.id === '3' && <Droplets className="w-4 h-4 text-cyan-500 dark:text-cyan-400" />}
-              {kpi.id === '4' && <AlertTriangle className="w-4 h-4 text-amber-500 dark:text-amber-400" />}
+          <div
+            key={kpi.id}
+            className="bg-black/30 backdrop-blur-md p-5 rounded-lg border border-white/10 hover:border-emerald-500/30 transition-all duration-300"
+          >
+            <div className="flex justify-between items-start mb-3">
+              <span className="text-white/60 text-sm font-medium uppercase tracking-wider">{kpi.label}</span>
+              {kpi.id === '1' && <Zap className="w-5 h-5 text-emerald-400" />}
+              {kpi.id === '2' && <Wind className="w-5 h-5 text-emerald-400" />}
+              {kpi.id === '3' && <Droplets className="w-5 h-5 text-emerald-400" />}
+              {kpi.id === '4' && <AlertTriangle className="w-5 h-5 text-amber-400" />}
             </div>
-            <div className="flex items-baseline gap-1">
-              <span className="text-2xl font-bold text-slate-900 dark:text-slate-100">{kpi.value}</span>
-              <span className="text-sm text-slate-500">{kpi.unit}</span>
+            <div className="flex items-baseline gap-2">
+              <span className="text-3xl font-bold text-white">{kpi.value}</span>
+              <span className="text-sm text-white/50">{kpi.unit}</span>
             </div>
             <div className={clsx(
-              "flex items-center mt-2 text-xs font-medium",
-              kpi.trendDirection === 'down' ? 'text-emerald-600 dark:text-emerald-500' : 'text-red-600 dark:text-red-500'
+              "flex items-center mt-3 text-xs font-medium",
+              kpi.trendDirection === 'down' ? 'text-emerald-400' : 'text-amber-400'
             )}>
-              {kpi.trendDirection === 'down' ? <ArrowDownRight className="w-3 h-3 mr-1" /> : <ArrowUpRight className="w-3 h-3 mr-1" />}
+              {kpi.trendDirection === 'down' ? <ArrowDownRight className="w-4 h-4 mr-1" /> : <ArrowUpRight className="w-4 h-4 mr-1" />}
               {Math.abs(kpi.trend)}% vs last period
             </div>
           </div>
@@ -229,12 +230,12 @@ const Overview: React.FC = () => {
       {/* Video Visualization Grid */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 lg:h-[500px]">
 
-        {/* Left: Main Building Overview - static, doesn't change with block selection */}
-        <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-[400px] lg:h-full flex flex-col">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-200">Building Overview</h3>
+        {/* Left: Main Building Overview */}
+        <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 overflow-hidden h-[400px] lg:h-full flex flex-col">
+          <div className="p-4 border-b border-white/10 flex justify-between items-center">
+            <h3 className="font-semibold text-white">Building Overview</h3>
           </div>
-          <div className="flex-1 relative flex items-center justify-center overflow-hidden" style={{ backgroundColor: 'rgb(35 35 35)' }}>
+          <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
             <video
               src="/assets/main.mp4?v=2"
               className="w-full h-full object-contain"
@@ -249,20 +250,23 @@ const Overview: React.FC = () => {
         </div>
 
         {/* Right: Selected Block View */}
-        <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm overflow-hidden h-[400px] lg:h-full flex flex-col">
-          <div className="p-4 border-b border-slate-200 dark:border-slate-700 flex justify-between items-center">
-            <h3 className="font-semibold text-slate-900 dark:text-slate-200">
+        <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 overflow-hidden h-[400px] lg:h-full flex flex-col">
+          <div className="p-4 border-b border-white/10 flex justify-between items-center">
+            <h3 className="font-semibold text-white">
               {selectedBuildingId === 'pleiades-a' ? 'Block A View' :
                selectedBuildingId === 'pleiades-b' ? 'Block B View' :
                selectedBuildingId === 'pleiades-c' ? 'Block C View' : 'Block View'}
             </h3>
             <div className="flex gap-2 text-xs">
-              <span className="px-2 py-1 bg-blue-100 text-blue-600 dark:bg-blue-500/10 dark:text-blue-400 rounded border border-blue-200 dark:border-blue-500/20">
+              <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/30">
                 {selectedBuildingId === 'pleiades-a' ? 'Block A' :
                  selectedBuildingId === 'pleiades-b' ? 'Block B' :
                  selectedBuildingId === 'pleiades-c' ? 'Block C' : 'Selected'}
               </span>
-              <span className="px-2 py-1 bg-emerald-100 text-emerald-600 dark:bg-emerald-500/10 dark:text-emerald-400 rounded border border-emerald-200 dark:border-emerald-500/20">Live</span>
+              <span className="px-2 py-1 bg-emerald-500/20 text-emerald-400 rounded border border-emerald-500/30 flex items-center gap-1">
+                <span className="w-1.5 h-1.5 bg-emerald-400 rounded-full animate-pulse"></span>
+                Live
+              </span>
             </div>
           </div>
           <div className="flex-1 relative bg-black">
@@ -277,18 +281,18 @@ const Overview: React.FC = () => {
         </div>
       </div>
 
-      {/* Consumption vs. Baseline - Full Width */}
-      <div className="bg-white dark:bg-slate-800/50 dark:backdrop-blur rounded border border-slate-200 dark:border-slate-700 shadow-sm p-5">
-        <div className="flex justify-between items-center mb-4">
-          <h3 className="font-semibold text-slate-900 dark:text-slate-200">Consumption vs. Baseline (24h)</h3>
+      {/* Consumption vs. Baseline Chart */}
+      <div className="bg-black/30 backdrop-blur-md rounded-lg border border-white/10 p-5">
+        <div className="flex justify-between items-center mb-6">
+          <h3 className="font-semibold text-white">Consumption vs. Baseline (24h)</h3>
           <div className="flex gap-4 text-xs">
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm bg-blue-500"></div>
-              <span className="text-slate-600 dark:text-slate-400">Actual</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-sm bg-emerald-500"></div>
+              <span className="text-white/60">Actual</span>
             </div>
-            <div className="flex items-center gap-1.5">
-              <div className="w-3 h-3 rounded-sm bg-slate-400 border border-dashed border-slate-500"></div>
-              <span className="text-slate-600 dark:text-slate-400">Baseline</span>
+            <div className="flex items-center gap-2">
+              <div className="w-3 h-3 rounded-sm bg-white/30 border border-dashed border-white/50"></div>
+              <span className="text-white/60">Baseline</span>
             </div>
           </div>
         </div>
@@ -297,35 +301,36 @@ const Overview: React.FC = () => {
             <AreaChart data={chartData} margin={{ top: 10, right: 20, left: 0, bottom: 0 }}>
               <defs>
                 <linearGradient id="colorActual" x1="0" y1="0" x2="0" y2="1">
-                  <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4}/>
-                  <stop offset="95%" stopColor="#3b82f6" stopOpacity={0.1}/>
+                  <stop offset="5%" stopColor="#10b981" stopOpacity={0.4}/>
+                  <stop offset="95%" stopColor="#10b981" stopOpacity={0.05}/>
                 </linearGradient>
               </defs>
-              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke={theme === 'dark' ? "rgba(255,255,255,0.08)" : "rgba(0,0,0,0.08)"} />
+              <CartesianGrid strokeDasharray="3 3" vertical={false} stroke="rgba(255,255,255,0.06)" />
               <XAxis
                 dataKey="timestamp"
                 axisLine={false}
                 tickLine={false}
-                tick={{fontSize: 11, fill: theme === 'dark' ? '#94a3b8' : '#64748b'}}
+                tick={{fontSize: 11, fill: 'rgba(255,255,255,0.4)'}}
                 interval={3}
               />
               <YAxis
                 axisLine={false}
                 tickLine={false}
-                tick={{fontSize: 11, fill: theme === 'dark' ? '#94a3b8' : '#64748b'}}
+                tick={{fontSize: 11, fill: 'rgba(255,255,255,0.4)'}}
                 unit=" kW"
                 width={50}
               />
               <Tooltip
                 contentStyle={{
-                  backgroundColor: theme === 'dark' ? '#1e293b' : '#ffffff',
+                  backgroundColor: 'rgba(0,0,0,0.8)',
+                  backdropFilter: 'blur(12px)',
                   borderRadius: '8px',
-                  border: theme === 'dark' ? '1px solid #334155' : '1px solid #e2e8f0',
-                  color: theme === 'dark' ? '#f1f5f9' : '#0f172a',
-                  boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                  border: '1px solid rgba(255,255,255,0.1)',
+                  color: '#fff',
+                  boxShadow: '0 4px 20px rgba(0,0,0,0.5)'
                 }}
-                labelStyle={{ fontWeight: 600, marginBottom: 4 }}
-                itemStyle={{ fontSize: '12px' }}
+                labelStyle={{ fontWeight: 600, marginBottom: 4, color: '#fff' }}
+                itemStyle={{ fontSize: '12px', color: '#fff' }}
                 formatter={(value: number, name: string) => [
                   `${value} kW`,
                   name === 'total' ? 'Actual Usage' : 'Baseline'
@@ -334,7 +339,7 @@ const Overview: React.FC = () => {
               <Area
                 type="monotone"
                 dataKey="total"
-                stroke="#3b82f6"
+                stroke="#10b981"
                 strokeWidth={2}
                 fillOpacity={1}
                 fill="url(#colorActual)"
@@ -344,7 +349,7 @@ const Overview: React.FC = () => {
               <Area
                 type="monotone"
                 dataKey="baseline"
-                stroke={theme === 'dark' ? '#94a3b8' : '#64748b'}
+                stroke="rgba(255,255,255,0.3)"
                 strokeWidth={2}
                 strokeDasharray="5 5"
                 fillOpacity={0}
