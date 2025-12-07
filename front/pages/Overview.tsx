@@ -9,12 +9,20 @@ import { useKpis, useEnergy, useAlerts } from '../hooks/useApi';
 import { buildingsApi } from '../api/buildings';
 import type { KPIsResponse, EnergyDataResponse, AlertListResponse, BuildingReport } from '../api/types';
 
-// Looping video component with optional scale
+// Looping video component with optional scale and playback rate
 const LoopingVideo: React.FC<{ src: string; className?: string; scale?: number }> = ({ src, className, scale = 1 }) => {
+  const videoRef = React.useRef<HTMLVideoElement>(null);
   const scaleStyle = scale !== 1 ? { transform: `scale(${scale})` } : {};
+
+  React.useEffect(() => {
+    if (videoRef.current) {
+      videoRef.current.playbackRate = 1;
+    }
+  }, [src]);
 
   return (
     <video
+      ref={videoRef}
       src={src}
       className={className}
       muted
@@ -23,6 +31,9 @@ const LoopingVideo: React.FC<{ src: string; className?: string; scale?: number }
       playsInline
       preload="auto"
       style={scaleStyle}
+      onLoadedMetadata={(e) => {
+        (e.target as HTMLVideoElement).playbackRate = 1;
+      }}
     />
   );
 };
@@ -237,7 +248,7 @@ const Overview: React.FC = () => {
           </div>
           <div className="flex-1 relative flex items-center justify-center overflow-hidden bg-black">
             <video
-              src="/assets/main.mp4?v=2"
+              src="/assets/main-bg.mp4"
               className="w-full h-full object-contain"
               style={{ transform: 'scale(1.1)' }}
               muted
@@ -245,6 +256,9 @@ const Overview: React.FC = () => {
               autoPlay
               playsInline
               preload="auto"
+              onLoadedMetadata={(e) => {
+                (e.target as HTMLVideoElement).playbackRate = 1;
+              }}
             />
           </div>
         </div>
@@ -272,9 +286,9 @@ const Overview: React.FC = () => {
           <div className="flex-1 relative bg-black">
             <LoopingVideo
               key={selectedBuildingId}
-              src={selectedBuildingId === 'pleiades-a' ? '/assets/a-block.mp4' :
-                   selectedBuildingId === 'pleiades-b' ? '/assets/b-block.mp4' :
-                   selectedBuildingId === 'pleiades-c' ? '/assets/c-block.mp4' : '/assets/a-block.mp4'}
+              src={selectedBuildingId === 'pleiades-a' ? '/assets/build-a.mp4?v=4' :
+                   selectedBuildingId === 'pleiades-b' ? '/assets/build-b.mp4?v=4' :
+                   selectedBuildingId === 'pleiades-c' ? '/assets/build-c.mp4?v=4' : '/assets/build-a.mp4?v=4'}
               className="w-full h-full object-cover"
             />
           </div>
